@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 16px;
+    }
+    h1 { font-size: 16px; color: #dc5652; margin-bottom: 12px; }
+    .stats { background: #16213e; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .stat-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 13px; }
+    .stat-val { color: #4ecca3; font-weight: bold; }
+    input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #0f3460;
+      color: #eee;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    input::placeholder { color: #666; }
+    .btn {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .btn-primary { background: #dc5652; color: white; }
+    .btn-secondary { background: #16213e; color: #4ecca3; border: 1px solid #4ecca3; }
+    .btn-danger { background: #333; color: #ff6b6b; }
+    .btn:hover { opacity: 0.9; }
+    .domains { margin: 8px 0; }
+    .domain-tag {
+      display: inline-block;
+      background: #0f3460;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 2px;
+      cursor: pointer;
+    }
+    .domain-tag:hover { background: #dc5652; }
+    .status { font-size: 11px; color: #666; margin-top: 8px; text-align: center; }
+    .status.connected { color: #4ecca3; }
+  </style>
+</head>
+<body>
+  <h1>Suika Hunter</h1>
+  
+  <div class="stats">
+    <div class="stat-row"><span>Cookies</span><span class="stat-val" id="cookies">0</span></div>
+    <div class="stat-row"><span>Headers</span><span class="stat-val" id="headers">0</span></div>
+    <div class="stat-row"><span>Requests</span><span class="stat-val" id="requests">0</span></div>
+    <div class="stat-row"><span>Endpoints</span><span class="stat-val" id="endpoints">0</span></div>
+  </div>
+
+  <input type="text" id="domain" placeholder="Domain to capture (e.g. redstorm.io)">
+  <button class="btn btn-primary" id="addDomain">Add Domain</button>
+
+  <div class="domains" id="domainList"></div>
+
+  <button class="btn btn-secondary" id="exportBtn">Export Session to CLI</button>
+  <button class="btn btn-danger" id="clearBtn">Clear Data</button>
+
+  <div class="status" id="status">Checking server...</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

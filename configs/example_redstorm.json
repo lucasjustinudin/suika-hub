@@ -1,0 +1,12 @@
+{
+  "target": "https://www.redstorm.io",
+  "modules": ["redstorm"],
+  "auth": {
+    "cookies": {
+      "session": "PASTE_YOUR_SESSION_COOKIE_HERE"
+    }
+  },
+  "delay": 1.5,
+  "concurrency": 3,
+  "timeout": 10
+}

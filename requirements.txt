@@ -1,0 +1,26 @@
+# Suika Hunter v2 - Modern Bug Bounty Tool
+# Async HTTP
+httpx[http2]>=0.27.0
+aiohttp>=3.9.0
+
+# Browser automation (Cloudflare bypass)
+playwright>=1.40.0
+
+# CLI
+rich>=13.7.0
+typer>=0.9.0
+
+# Parsing & analysis
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# HAR parsing
+haralyzer>=2.4.0
+
+# Utilities
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+
+# Async support
+anyio>=4.0.0
