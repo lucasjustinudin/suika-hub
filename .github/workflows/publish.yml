@@ -1,0 +1,116 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      publish_target:
+        description: "Publish target"
+        required: true
+        default: "testpypi"
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test-before-publish:
+    name: Test before publish
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Install from wheel
+        run: pip install dist/*.whl
+
+      - name: Verify installation
+        run: |
+          suika-hub --help
+          python -c "import suika_hub; print(f'Version: {suika_hub.__version__}')"
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: test-before-publish
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.publish_target == 'testpypi'
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/suika-hub
+    permissions:
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: test-before-publish
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name == 'release') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_target == 'pypi')
+    environment:
+      name: pypi
+      url: https://pypi.org/p/suika-hub
+    permissions:
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

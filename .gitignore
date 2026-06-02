@@ -1,27 +1,41 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.egg-info/
-dist/
+*$py.class
+
+# Distribution / packaging
 build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environments
 .venv/
 venv/
-
-# Reports (local only)
-reports/*.json
-reports/*.md
-
-# Configs with secrets
-configs/*.json
-!configs/example_*.json
+env/
 
 # IDE
-.vscode/
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Env
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Reports (generated at runtime)
+reports/
+sessions/
+
+# Environment
 .env
+.env.local

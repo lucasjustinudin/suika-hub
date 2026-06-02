@@ -1,17 +1,15 @@
 """Async scan engine - orchestrates modules"""
-import asyncio
 import time
-from typing import Dict, List, Type
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
-from rich.table import Table
-from rich.panel import Panel
 
-from core.config import ScanConfig
-from core.http import AsyncClient
-from core.module import BaseModule, Finding
-from core.reporter import Reporter
-from core.formatters import save_all_formats
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.table import Table
+
+from suika_hub.core.config import ScanConfig
+from suika_hub.core.http import AsyncClient
+from suika_hub.core.module import BaseModule, Finding
+from suika_hub.core.reporter import Reporter
 
 console = Console()
 
@@ -20,10 +18,10 @@ class SuikaEngine:
     """Main async scan engine"""
 
     def __init__(self):
-        self.modules: Dict[str, BaseModule] = {}
-        self.aliases: Dict[str, str] = {}
+        self.modules: dict[str, BaseModule] = {}
+        self.aliases: dict[str, str] = {}
 
-    def register(self, module_class: Type[BaseModule]):
+    def register(self, module_class: type[BaseModule]):
         """Register a module class"""
         instance = module_class()
         self.modules[instance.name] = instance
@@ -39,7 +37,7 @@ class SuikaEngine:
             return self.modules.get(real_name)
         return None
 
-    async def run(self, config: ScanConfig) -> Dict:
+    async def run(self, config: ScanConfig) -> dict:
         """Run scan with given config"""
         start_time = time.time()
 
@@ -61,7 +59,7 @@ class SuikaEngine:
             concurrency=config.concurrency,
             delay=config.delay,
         ) as client:
-            all_findings: List[Finding] = []
+            all_findings: list[Finding] = []
             modules_run = []
 
             with Progress(
@@ -106,31 +104,20 @@ class SuikaEngine:
         # Print summary
         self._print_summary(result)
 
-        # Save report (legacy reporter + new formatters)
+        # Save report
         reporter = Reporter(config.output_dir)
         reporter.save(result)
 
-        # Also save SARIF and HTML via new formatters
-        try:
-            fmt_paths = save_all_formats(
-                all_findings, config.output_dir,
-                prefix="scan", target=config.target, modules=modules_run,
-            )
-            for fmt_name, fmt_path in fmt_paths.items():
-                console.print(f"  [dim]{fmt_name.upper()}:[/dim] {fmt_path}")
-        except Exception as fmt_err:
-            console.print(f"[yellow]Formatter warning: {fmt_err}[/yellow]")
-
         return result
 
-    def _count_severity(self, findings: List[Finding]) -> Dict[str, int]:
+    def _count_severity(self, findings: list[Finding]) -> dict[str, int]:
         counts = {}
         for f in findings:
             sev = f.get("severity", "INFO")
             counts[sev] = counts.get(sev, 0) + 1
         return counts
 
-    def _print_summary(self, result: Dict):
+    def _print_summary(self, result: dict):
         """Print rich summary table"""
         console.print()
 

@@ -1,0 +1,5 @@
+# Add any extra pip dependencies your plugin needs.
+# These are installed alongside your plugin.
+# Example:
+# requests>=2.31.0
+# beautifulsoup4>=4.12.0

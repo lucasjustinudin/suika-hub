@@ -5,24 +5,22 @@ Async, modular, AI-powered vulnerability scanner
 """
 
 import asyncio
-import json as _json
-import sys
-from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-from core.config import ScanConfig, AuthConfig
-from core.engine import SuikaEngine
-from core.plugin import PluginManager, SUIKA_PLUGINS_DIR
-from modules import (
-    RedStormScanner, IDORScanner, ReconScanner,
-    APIFuzzer, AuthBypassScanner, FileUploadScanner, SSRFScanner,
+from suika_hub.core.config import AuthConfig, ScanConfig
+from suika_hub.core.engine import SuikaEngine
+from suika_hub.modules import (
+    APIFuzzer,
+    AuthBypassScanner,
+    FileUploadScanner,
+    IDORScanner,
+    ReconScanner,
+    RedStormScanner,
+    SSRFScanner,
 )
 
 app = typer.Typer(add_completion=False)
@@ -37,7 +35,7 @@ def banner():
         " \\__ \\ || | | / / _` |  | __ | || | ' \\  _/ -_) '_|\n"
         " |___/\\_,_|_|_\\_\\__,_|  |_||_|\\_,_|_||_\\__\\___|_|  \n"
         "[/bold red]\n"
-        "[dim]v2.0 - Async | Modular | AI-Powered | 7 Modules + Plugins[/dim]",
+        "[dim]v2.0 - Async | Modular | AI-Powered | 7 Modules[/dim]",
         border_style="red",
     ))
 
@@ -45,7 +43,6 @@ def banner():
 def build_engine() -> SuikaEngine:
     """Build engine with all modules registered"""
     engine = SuikaEngine()
-    # Register built-in modules
     engine.register(RedStormScanner)
     engine.register(IDORScanner)
     engine.register(ReconScanner)
@@ -53,15 +50,6 @@ def build_engine() -> SuikaEngine:
     engine.register(AuthBypassScanner)
     engine.register(FileUploadScanner)
     engine.register(SSRFScanner)
-
-    # Discover and register plugins
-    pm = PluginManager()
-    plugins = pm.discover()
-    for info in plugins:
-        if info.module_class:
-            engine.register(info.module_class)
-            console.print(f"  [dim]Plugin loaded:[/dim] [cyan]{info.name}[/cyan] [dim]({info.source})[/dim]")
-
     return engine
 
 
@@ -69,9 +57,9 @@ def build_engine() -> SuikaEngine:
 def scan(
     target: str = typer.Option(..., "--target", "-t", help="Target URL or domain"),
     module: str = typer.Option(..., "--module", "-m", help="Modules: redstorm,idor,recon,api,auth,upload,ssrf (comma-separated)"),
-    cookie: Optional[str] = typer.Option(None, "--cookie", help="Session cookie: 'key=val; key2=val2'"),
-    har: Optional[str] = typer.Option(None, "--har", help="HAR file path to import session"),
-    session: Optional[str] = typer.Option(None, "--session", help="Session JSON from capture server"),
+    cookie: str | None = typer.Option(None, "--cookie", help="Session cookie: 'key=val; key2=val2'"),
+    har: str | None = typer.Option(None, "--har", help="HAR file path to import session"),
+    session: str | None = typer.Option(None, "--session", help="Session JSON from capture server"),
     delay: float = typer.Option(1.5, "--delay", "-d", help="Delay between requests (seconds)"),
     concurrency: int = typer.Option(5, "--concurrency", "-c", help="Max concurrent requests"),
     timeout: int = typer.Option(10, "--timeout", help="Request timeout (seconds)"),
@@ -95,7 +83,7 @@ def scan(
     # Import from HAR file
     if har:
         try:
-            from core.har_parser import HARParser
+            from suika_hub.core.har_parser import HARParser
             parser = HARParser(har)
             session_data = parser.get_session_info()
             cookies.update(session_data.get("cookies", {}))
@@ -107,7 +95,9 @@ def scan(
     # Import from session file (from capture server)
     if session:
         try:
-            session_data = _json.loads(Path(session).read_text())
+            import json
+            from pathlib import Path
+            session_data = json.loads(Path(session).read_text())
             cookies.update(session_data.get("cookies", {}))
             headers.update(session_data.get("headers", {}))
             console.print(f"[green]Imported session: {len(cookies)} cookies[/green]")
@@ -168,14 +158,14 @@ def recommend(
     """AI-powered module recommendation based on target profile"""
     banner()
 
-    from core.decision_engine import DecisionEngine
+    from suika_hub.core.decision_engine import DecisionEngine
 
     engine = DecisionEngine()
 
     if target == "redstorm":
         recommendations = engine.recommend_for_redstorm()
     else:
-        from core.decision_engine import TargetProfile
+        from suika_hub.core.decision_engine import TargetProfile
         profile = TargetProfile(domain=target)
         recommendations = engine.recommend_modules(profile, time_budget)
 
@@ -200,135 +190,9 @@ def recommend(
     # Generate command
     module_list = ",".join(r["module"].replace("_scanner", "").replace("_fuzzer", "").replace("_bypass", "") for r in recommendations)
     total_time = sum(r["time_estimate"] for r in recommendations)
-    console.print(f"\n[bold]Suggested command:[/bold]")
-    console.print(f"  python suika.py scan -t https://www.redstorm.io -m {module_list} --cookie 'session=xxx'")
+    console.print("\n[bold]Suggested command:[/bold]")
+    console.print(f"  suika-hub scan -t https://www.redstorm.io -m {module_list} --cookie 'session=xxx'")
     console.print(f"\n[dim]Estimated time: {total_time}s ({total_time//60}m {total_time%60}s)[/dim]")
-
-
-# ── Plugin management commands ───────────────────────────────────────────────
-
-@app.command()
-def install(
-    spec: str = typer.Argument(..., help="Plugin to install: PyPI package, git URL, or local directory"),
-):
-    """Install a third-party plugin"""
-    banner()
-    console.print(f"[bold]Installing plugin:[/bold] {spec}")
-
-    try:
-        # Check if it's a local path
-        p = Path(spec)
-        if p.exists():
-            info = PluginManager.install_local(str(p))
-            console.print(f"[green]✓ Local plugin installed:[/green] {info.name}")
-            console.print(f"  Path: {info.path}")
-        else:
-            info = PluginManager.install_package(spec)
-            console.print(f"[green]✓ Package installed:[/green] {info.name}")
-            if info.module_class:
-                console.print(f"  Module: [cyan]{info.module_class.name}[/cyan]")
-
-        console.print(f"\n[dim]Run 'suika list-plugins' to verify. Use '-m {info.name}' in scans.[/dim]")
-    except Exception as e:
-        console.print(f"[red]✗ Install failed: {e}[/red]")
-        raise typer.Exit(1)
-
-
-@app.command(name="list-plugins")
-def list_plugins():
-    """List installed plugins"""
-    banner()
-
-    pm = PluginManager()
-    plugins = pm.discover()
-
-    if not plugins:
-        console.print("[yellow]No plugins found.[/yellow]")
-        console.print(f"\n[dim]Install plugins from PyPI:[/dim]")
-        console.print(f"  suika install suika-plugin-example")
-        console.print(f"\n[dim]Or from a local directory:[/dim]")
-        console.print(f"  suika install /path/to/my-plugin/")
-        console.print(f"\n[dim]Plugin directories searched:[/dim]")
-        for d in pm._dirs:
-            console.print(f"  • {d}")
-        return
-
-    table = Table(title="Installed Plugins", border_style="red")
-    table.add_column("Name", style="cyan", width=20)
-    table.add_column("Source", style="dim", width=8)
-    table.add_column("Description")
-    table.add_column("Version", width=10)
-    table.add_column("Path", style="dim")
-
-    for info in plugins:
-        desc = (info.description or "")[:60]
-        table.add_row(
-            info.name,
-            info.source,
-            desc,
-            info.version,
-            str(info.path or "")[:50],
-        )
-
-    console.print(table)
-    console.print(f"\n[dim]Use: suika scan -t <target> -m <plugin-name>[/dim]")
-
-
-@app.command()
-def remove_plugin(
-    name: str = typer.Argument(..., help="Plugin name to remove"),
-):
-    """Remove an installed plugin"""
-    banner()
-    # Try both local and pip removal
-    removed = PluginManager.remove_local(name)
-    if not removed:
-        removed = PluginManager.remove_package(name)
-    if removed:
-        console.print(f"[green]✓ Plugin removed:[/green] {name}")
-    else:
-        console.print(f"[red]✗ Plugin not found:[/red] {name}")
-        raise typer.Exit(1)
-
-
-@app.command()
-def export(
-    json_file: str = typer.Argument(..., help="Path to scan results JSON file"),
-    format: str = typer.Option("all", "--format", "-f", help="Output format: json, sarif, html, all"),
-    output: str = typer.Option("reports", "--output", "-o", help="Output directory"),
-):
-    """Export scan results in different formats (JSON, SARIF, HTML)"""
-    banner()
-
-    from core.formatters import save_json, save_sarif, save_html, save_all_formats
-
-    try:
-        data = _json.loads(Path(json_file).read_text())
-        findings = data.get("findings", [])
-        target = data.get("target", "")
-        modules = data.get("modules_executed", [])
-
-        if format == "all":
-            paths = save_all_formats(findings, output, target=target, modules=modules)
-            for fmt, p in paths.items():
-                console.print(f"  [green]{fmt.upper()}:[/green] {p}")
-        elif format == "json":
-            p = save_json(findings, str(Path(output) / "report.json"), target=target, modules=modules)
-            console.print(f"  [green]JSON:[/green] {p}")
-        elif format == "sarif":
-            p = save_sarif(findings, str(Path(output) / "report.sarif"), target=target)
-            console.print(f"  [green]SARIF:[/green] {p}")
-        elif format == "html":
-            p = save_html(findings, str(Path(output) / "report.html"), target=target, modules=modules)
-            console.print(f"  [green]HTML:[/green] {p}")
-        else:
-            console.print(f"[red]Unknown format: {format}[/red]")
-            raise typer.Exit(1)
-
-        console.print(f"\n[green]✓ Reports exported to {output}/[/green]")
-    except Exception as e:
-        console.print(f"[red]Export failed: {e}[/red]")
-        raise typer.Exit(1)
 
 
 @app.command()
@@ -338,25 +202,25 @@ def server(
 ):
     """Start capture server (receives data from browser extension)"""
     banner()
-    from server import run_server
+    from suika_hub.server import run_server
     run_server(host=host, port=port)
 
 
 @app.command()
 def import_har(
     har_file: str = typer.Argument(..., help="Path to HAR file"),
-    domain: Optional[str] = typer.Option(None, "--domain", help="Filter by domain"),
+    domain: str | None = typer.Option(None, "--domain", help="Filter by domain"),
 ):
     """Import and analyze a HAR file"""
     banner()
 
-    from core.har_parser import HARParser
+    from suika_hub.core.har_parser import HARParser
 
     try:
         parser = HARParser(har_file)
         info = parser.get_session_info(domain)
 
-        console.print(f"\n[bold]HAR Analysis:[/bold]")
+        console.print("\n[bold]HAR Analysis:[/bold]")
         console.print(f"  Cookies: {len(info['cookies'])}")
         console.print(f"  Auth headers: {len(info['headers'])}")
         console.print(f"  Endpoints: {len(info['endpoints'])}")
@@ -366,7 +230,7 @@ def import_har(
         console.print(f"  ID patterns: {patterns.get('id_patterns', [])[:5]}")
         console.print(f"  Methods: {patterns.get('methods', [])}")
 
-        console.print(f"\n[bold]Top Endpoints:[/bold]")
+        console.print("\n[bold]Top Endpoints:[/bold]")
         for ep in info["endpoints"][:20]:
             status_color = "green" if ep["status"] == 200 else "yellow" if ep["status"] < 400 else "red"
             console.print(f"  [{status_color}]{ep['status']}[/{status_color}] {ep['method']:6} {ep['path']}")
@@ -375,5 +239,10 @@ def import_har(
         console.print(f"[red]Error: {e}[/red]")
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the CLI."""
     app()
+
+
+if __name__ == "__main__":
+    main()

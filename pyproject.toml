@@ -1,0 +1,110 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "suika-hub"
+version = "2.0.0"
+description = "Async, modular, AI-powered bug bounty vulnerability scanner"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Suika Hunter Team" },
+]
+keywords = ["security", "bug-bounty", "vulnerability-scanner", "pentesting", "async"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx[http2]>=0.27.0",
+    "aiohttp>=3.9.0",
+    "rich>=13.7.0",
+    "typer>=0.9.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "pydantic>=2.5.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
+    "anyio>=4.0.0",
+]
+
+[project.optional-dependencies]
+browser = [
+    "playwright>=1.40.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+all = [
+    "suika-hub[browser,dev]",
+]
+
+[project.scripts]
+suika-hub = "suika_hub.cli:main"
+suika-hunter = "suika_hub.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/suika-hunter/suika-hub"
+Repository = "https://github.com/suika-hunter/suika-hub"
+Issues = "https://github.com/suika-hunter/suika-hub/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["suika_hub"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "TCH",  # type-checking imports
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "N802",   # function name should be lowercase
+    "N803",   # argument name should be lowercase
+    "N806",   # variable in function should be lowercase
+    "SIM108", # use ternary operator
+    "TCH001", # move imports into type-checking blocks
+    "TCH002", # move imports into type-checking blocks
+    "TCH003", # move imports into type-checking blocks
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["suika_hub"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
