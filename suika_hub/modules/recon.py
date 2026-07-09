@@ -35,7 +35,7 @@ class ReconScanner(BaseModule):
         base_url = target if target.startswith("http") else f"https://{target}"
 
         # Stage 1: Subdomain enumeration (passive)
-        subdomains = await self._enumerate_subdomains(domain, client)
+        await self._enumerate_subdomains(domain, client)
 
         # Stage 2: Endpoint discovery
         await self._discover_endpoints(base_url, client)
@@ -80,7 +80,7 @@ class ReconScanner(BaseModule):
         responses = await client.batch_get(urls)
 
         interesting = []
-        for path, resp in zip(self.COMMON_PATHS, responses):
+        for path, resp in zip(self.COMMON_PATHS, responses, strict=False):
             if resp["status"] in (200, 301, 302, 403):
                 interesting.append({
                     "path": path,

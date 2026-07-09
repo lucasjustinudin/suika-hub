@@ -116,7 +116,7 @@ class IDORScanner(BaseModule):
         found = []
 
         if isinstance(body, dict):
-            for key in body.keys():
+            for key in body:
                 if key.lower() in sensitive_keys:
                     found.append(key)
 

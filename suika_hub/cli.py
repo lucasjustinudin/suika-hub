@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Suika Hunter v2.0 - Next Gen Bug Bounty Tool
+suika-hub v2.0 - Modular Web Security Scanner
 Async, modular, AI-powered vulnerability scanner
 """
 

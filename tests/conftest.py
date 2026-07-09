@@ -1,15 +1,11 @@
 """Shared fixtures for suika-hub tests."""
-import asyncio
 import json
-from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
 
 import pytest
 
-from suika_hub.core.config import ScanConfig, AuthConfig
+from suika_hub.core.config import AuthConfig, ScanConfig
 from suika_hub.core.module import Finding
-
 
 # ---------------------------------------------------------------------------
 # Sample data factories
@@ -94,14 +90,14 @@ def make_response(
     url: str = "https://example.com/test",
     status: int = 200,
     body: Any = None,
-    headers: Dict[str, str] | None = None,
+    headers: dict[str, str] | None = None,
     error: str | None = None,
     length: int = 0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a fake response dict matching AsyncClient.request() output."""
     if headers is None:
         headers = {"content-type": "application/json"}
-    resp: Dict[str, Any] = {
+    resp: dict[str, Any] = {
         "url": url,
         "status": status,
         "body": body,
@@ -147,7 +143,7 @@ def mock_cf_response():
 class MockAsyncClient:
     """A mock of core.http.AsyncClient that returns configurable responses."""
 
-    def __init__(self, responses: Dict[str, Any] | None = None, default=None):
+    def __init__(self, responses: dict[str, Any] | None = None, default=None):
         # url_substring -> response
         self._responses = responses or {}
         self._default = default or make_response()
@@ -156,7 +152,7 @@ class MockAsyncClient:
         self.delay = 0.0
         self.calls: list = []
 
-    async def request(self, method: str, url: str, **kwargs) -> Dict[str, Any]:
+    async def request(self, method: str, url: str, **kwargs) -> dict[str, Any]:
         self.request_count += 1
         self.calls.append(("request", method, url, kwargs))
         for pattern, resp in self._responses.items():
@@ -164,16 +160,16 @@ class MockAsyncClient:
                 return resp
         return self._default
 
-    async def get(self, url: str, **kwargs) -> Dict[str, Any]:
+    async def get(self, url: str, **kwargs) -> dict[str, Any]:
         return await self.request("GET", url, **kwargs)
 
-    async def post(self, url: str, **kwargs) -> Dict[str, Any]:
+    async def post(self, url: str, **kwargs) -> dict[str, Any]:
         return await self.request("POST", url, **kwargs)
 
-    async def put(self, url: str, **kwargs) -> Dict[str, Any]:
+    async def put(self, url: str, **kwargs) -> dict[str, Any]:
         return await self.request("PUT", url, **kwargs)
 
-    async def delete(self, url: str, **kwargs) -> Dict[str, Any]:
+    async def delete(self, url: str, **kwargs) -> dict[str, Any]:
         return await self.request("DELETE", url, **kwargs)
 
     async def batch_get(self, urls: list) -> list:

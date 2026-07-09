@@ -1,6 +1,7 @@
 """Tests for modules.ssrf_scanner – SSRFScanner."""
 import pytest
-from modules.ssrf_scanner import SSRFScanner
+
+from suika_hub.modules.ssrf_scanner import SSRFScanner
 from tests.conftest import MockAsyncClient, make_response
 
 

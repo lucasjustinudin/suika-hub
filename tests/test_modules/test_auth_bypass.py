@@ -1,8 +1,9 @@
 """Tests for modules.auth_bypass – AuthBypassScanner."""
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from modules.auth_bypass import AuthBypassScanner
+import pytest
+
+from suika_hub.modules.auth_bypass import AuthBypassScanner
 from tests.conftest import MockAsyncClient, make_response
 
 
@@ -65,7 +66,7 @@ class TestNoAuth:
         mock_no_auth.__aexit__ = AsyncMock(return_value=False)
         mock_no_auth.delay = 0
 
-        with patch("modules.auth_bypass.AsyncClient", return_value=mock_no_auth):
+        with patch("suika_hub.modules.auth_bypass.AsyncClient", return_value=mock_no_auth):
             await scanner._test_no_auth("https://example.com", MagicMock(delay=0), {})
 
         high_findings = [f for f in scanner.findings if f.get("severity") == "HIGH"]
@@ -80,7 +81,7 @@ class TestNoAuth:
         mock_no_auth.__aexit__ = AsyncMock(return_value=False)
         mock_no_auth.delay = 0
 
-        with patch("modules.auth_bypass.AsyncClient", return_value=mock_no_auth):
+        with patch("suika_hub.modules.auth_bypass.AsyncClient", return_value=mock_no_auth):
             await scanner._test_no_auth("https://example.com", MagicMock(delay=0), {})
 
         assert len(scanner.findings) == 0
@@ -179,7 +180,7 @@ class TestExecute:
         mock_no_auth.__aexit__ = AsyncMock(return_value=False)
         mock_no_auth.delay = 0
 
-        with patch("modules.auth_bypass.AsyncClient", return_value=mock_no_auth):
+        with patch("suika_hub.modules.auth_bypass.AsyncClient", return_value=mock_no_auth):
             findings = await scanner.execute("https://example.com", client, {})
 
         assert isinstance(findings, list)

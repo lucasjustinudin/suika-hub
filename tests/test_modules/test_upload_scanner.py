@@ -1,6 +1,7 @@
 """Tests for modules.upload_scanner – FileUploadScanner."""
 import pytest
-from modules.upload_scanner import FileUploadScanner
+
+from suika_hub.modules.upload_scanner import FileUploadScanner
 from tests.conftest import MockAsyncClient, make_response
 
 

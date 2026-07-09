@@ -121,18 +121,17 @@ class APIFuzzer(BaseModule):
         for payload in self.XSS:
             resp = await client.get(url, params={"q": payload, "name": payload})
 
-            if resp["status"] == 200 and isinstance(resp["body"], str):
-                if payload in resp["body"]:
-                    self.add_finding(
-                        severity="MEDIUM",
-                        title=f"Reflected XSS: {url}",
-                        description="User input reflected in response without sanitization",
-                        url=url,
-                        evidence=f"Payload reflected: {payload[:50]}",
-                        impact="Session hijacking, phishing",
-                        remediation="Encode output, implement CSP",
-                    )
-                    break
+            if resp["status"] == 200 and isinstance(resp["body"], str) and payload in resp["body"]:
+                self.add_finding(
+                    severity="MEDIUM",
+                    title=f"Reflected XSS: {url}",
+                    description="User input reflected in response without sanitization",
+                    url=url,
+                    evidence=f"Payload reflected: {payload[:50]}",
+                    impact="Session hijacking, phishing",
+                    remediation="Encode output, implement CSP",
+                )
+                break
 
     async def _test_boundary(self, url: str, client: AsyncClient):
         """Test boundary conditions"""

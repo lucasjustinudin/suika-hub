@@ -137,9 +137,7 @@ class AsyncClient:
             text = response.text[:500]
             if "Just a moment" in text or "cf-browser-verification" in text:
                 return True
-        if response.status_code == 503 and "cloudflare" in response.text.lower()[:500]:
-            return True
-        return False
+        return response.status_code == 503 and "cloudflare" in response.text.lower()[:500]
 
     async def close(self):
         await self.client.aclose()

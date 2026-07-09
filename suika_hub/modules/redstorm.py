@@ -96,7 +96,7 @@ class RedStormScanner(BaseModule):
                         usernames.append(str(uid))
 
                         # Check for sensitive data in leaderboard
-                        sensitive = [k for k in entry.keys() if k in (
+                        sensitive = [k for k in entry if k in (
                             "email", "phone", "is_admin", "role", "token",
                             "password_hash", "api_key", "address"
                         )]
@@ -183,7 +183,7 @@ class RedStormScanner(BaseModule):
         urls = [f"{base}/api/researcher/program/{slug}" for slug in self.PROGRAM_SLUGS]
         responses = await client.batch_get(urls)
 
-        for slug, resp in zip(self.PROGRAM_SLUGS, responses):
+        for slug, resp in zip(self.PROGRAM_SLUGS, responses, strict=False):
             if resp["status"] == 200:
                 accessible.append(slug)
 
@@ -222,7 +222,7 @@ class RedStormScanner(BaseModule):
         accessible = []
         errors_502 = []
 
-        for ep, resp in zip(self.ENDPOINTS, responses):
+        for ep, resp in zip(self.ENDPOINTS, responses, strict=False):
             if resp["status"] == 200:
                 accessible.append(ep)
             elif resp["status"] == 502:

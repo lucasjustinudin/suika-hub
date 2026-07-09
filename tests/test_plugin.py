@@ -3,13 +3,12 @@
 The project uses a decision engine rather than a traditional plugin registry;
 this file tests the scoring, recommendation, and analysis logic.
 """
-import pytest
-from core.decision_engine import (
-    DecisionEngine,
-    TargetProfile,
-    VULN_PRIORITY,
+from suika_hub.core.decision_engine import (
     MODULE_EFFECTIVENESS,
     MODULE_TIME_ESTIMATE,
+    VULN_PRIORITY,
+    DecisionEngine,
+    TargetProfile,
 )
 
 
@@ -52,7 +51,7 @@ class TestConstants:
         assert len(MODULE_EFFECTIVENESS) == 7
 
     def test_module_time_estimates(self):
-        for name, t in MODULE_TIME_ESTIMATE.items():
+        for _name, t in MODULE_TIME_ESTIMATE.items():
             assert isinstance(t, int)
             assert t > 0
 

@@ -84,7 +84,7 @@ class BrowserSession:
                     "headers": await response.all_headers(),
                     "body": body.decode("utf-8", errors="replace")[:10000],
                 })
-            except:
+            except Exception:
                 pass
 
         self.page.on("response", handle_response)

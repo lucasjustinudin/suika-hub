@@ -1,6 +1,7 @@
 """Tests for core.module – Finding and BaseModule."""
 import pytest
-from suika_hub.core.module import Finding, BaseModule
+
+from suika_hub.core.module import BaseModule, Finding
 
 
 class TestFinding:

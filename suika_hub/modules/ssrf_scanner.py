@@ -190,7 +190,4 @@ class SSRFScanner(BaseModule):
             return True
 
         # Response differs significantly from normal error
-        if resp["status"] == 200 and len(body) > 100 and "not found" not in body.lower():
-            return True
-
-        return False
+        return resp["status"] == 200 and len(body) > 100 and "not found" not in body.lower()

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "suika-hub"
 version = "2.0.0"
-description = "Async, modular, AI-powered bug bounty vulnerability scanner"
+description = "Async modular web security scanning toolkit"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -38,6 +38,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",
     "anyio>=4.0.0",
+    "haralyzer>=2.4.0",
 ]
 
 [project.optional-dependencies]
@@ -60,9 +61,9 @@ suika-hub = "suika_hub.cli:main"
 suika-hunter = "suika_hub.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/suika-hunter/suika-hub"
-Repository = "https://github.com/suika-hunter/suika-hub"
-Issues = "https://github.com/suika-hunter/suika-hub/issues"
+Homepage = "https://github.com/lucasjustinudin/suika-hub"
+Repository = "https://github.com/lucasjustinudin/suika-hub"
+Issues = "https://github.com/lucasjustinudin/suika-hub/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["suika_hub"]

@@ -1,5 +1,6 @@
 """Tests for modules.recon – ReconScanner."""
 import pytest
+
 from suika_hub.modules.recon import ReconScanner
 from tests.conftest import MockAsyncClient, make_response
 

@@ -1,5 +1,6 @@
 """Tests for modules.api_fuzzer – APIFuzzer."""
 import pytest
+
 from suika_hub.modules.api_fuzzer import APIFuzzer
 from tests.conftest import MockAsyncClient, make_response
 

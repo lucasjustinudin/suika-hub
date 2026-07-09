@@ -1,12 +1,8 @@
 """Tests for core.reporter – JSON + Markdown report generation."""
 import json
-from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from suika_hub.core.reporter import Reporter
-from suika_hub.core.module import Finding
 
 
 class TestReporter:
@@ -56,7 +52,7 @@ class TestReporter:
         md_files = list(tmp_path.glob("md_test_*.md"))
         assert len(md_files) == 1
         content = md_files[0].read_text()
-        assert "# Suika Hunter - Scan Report" in content
+        assert "# suika-hub Scan Report" in content
         assert "https://example.com" in content
         assert "CRITICAL" in content
 
@@ -70,7 +66,7 @@ class TestMarkdownFormatting:
 
     def test_header_present(self):
         md = self._get_markdown({"target": "t", "stats": {}, "modules_executed": [], "findings": []})
-        assert "# Suika Hunter - Scan Report" in md
+        assert "# suika-hub Scan Report" in md
 
     def test_target_in_report(self):
         md = self._get_markdown({"target": "https://target.com", "stats": {}, "modules_executed": [], "findings": []})

@@ -1,5 +1,4 @@
 """Tests for suika_hub package imports and basic functionality."""
-import pytest
 
 
 class TestImports:
@@ -11,7 +10,7 @@ class TestImports:
         assert suika_hub.__version__ == "2.0.0"
 
     def test_core_config(self):
-        from suika_hub.core.config import ScanConfig, AuthConfig
+        from suika_hub.core.config import AuthConfig, ScanConfig
         assert ScanConfig is not None
         assert AuthConfig is not None
 
@@ -42,8 +41,13 @@ class TestImports:
 
     def test_modules_package(self):
         from suika_hub.modules import (
-            RedStormScanner, IDORScanner, ReconScanner,
-            APIFuzzer, AuthBypassScanner, FileUploadScanner, SSRFScanner,
+            APIFuzzer,
+            AuthBypassScanner,
+            FileUploadScanner,
+            IDORScanner,
+            ReconScanner,
+            RedStormScanner,
+            SSRFScanner,
         )
         assert RedStormScanner is not None
         assert IDORScanner is not None
@@ -69,7 +73,7 @@ class TestConfig:
         assert config.verbose is False
 
     def test_scan_config_custom(self):
-        from suika_hub.core.config import ScanConfig, AuthConfig
+        from suika_hub.core.config import AuthConfig, ScanConfig
         config = ScanConfig(
             target="https://example.com",
             modules=["recon", "idor"],
@@ -119,7 +123,7 @@ class TestEngine:
 
     def test_engine_registration(self):
         from suika_hub.core.engine import SuikaEngine
-        from suika_hub.modules import RedStormScanner, IDORScanner
+        from suika_hub.modules import IDORScanner, RedStormScanner
 
         engine = SuikaEngine()
         engine.register(RedStormScanner)
@@ -152,8 +156,13 @@ class TestEngine:
     def test_engine_register_all_modules(self):
         from suika_hub.core.engine import SuikaEngine
         from suika_hub.modules import (
-            RedStormScanner, IDORScanner, ReconScanner,
-            APIFuzzer, AuthBypassScanner, FileUploadScanner, SSRFScanner,
+            APIFuzzer,
+            AuthBypassScanner,
+            FileUploadScanner,
+            IDORScanner,
+            ReconScanner,
+            RedStormScanner,
+            SSRFScanner,
         )
 
         engine = SuikaEngine()

@@ -33,7 +33,7 @@ class Reporter:
     def _to_markdown(self, results: dict) -> str:
         """Convert results to markdown report"""
         lines = [
-            "# Suika Hunter - Scan Report",
+            "# suika-hub Scan Report",
             "",
             f"**Target:** {results.get('target', 'N/A')}",
             f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",

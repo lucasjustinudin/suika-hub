@@ -1,12 +1,11 @@
 """Tests for suika_hub.core.http – AsyncClient."""
-import asyncio
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
 
-from suika_hub.core.http import AsyncClient, USER_AGENTS
+from suika_hub.core.http import USER_AGENTS, AsyncClient
 
 
 class TestUserAgents:
@@ -25,7 +24,7 @@ class TestAsyncClientConstruction:
         client = AsyncClient()
         try:
             headers = client.client.headers
-            assert "user-agent" in {k.lower() for k in headers.keys()}
+            assert "user-agent" in {k.lower() for k in headers}
         finally:
             await client.close()
 

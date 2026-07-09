@@ -1,6 +1,7 @@
 """Tests for modules.redstorm – RedStormScanner."""
 import pytest
-from modules.redstorm import RedStormScanner
+
+from suika_hub.modules.redstorm import RedStormScanner
 from tests.conftest import MockAsyncClient, make_response
 
 

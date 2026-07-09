@@ -1,12 +1,9 @@
 """Tests for core.config – ScanConfig, AuthConfig."""
 import json
-import tempfile
-from pathlib import Path
 
-import pytest
 import yaml
 
-from suika_hub.core.config import ScanConfig, AuthConfig
+from suika_hub.core.config import AuthConfig, ScanConfig
 
 
 class TestAuthConfig:

@@ -1,5 +1,6 @@
 """Tests for modules.idor – IDORScanner."""
 import pytest
+
 from suika_hub.modules.idor import IDORScanner
 from tests.conftest import MockAsyncClient, make_response
 

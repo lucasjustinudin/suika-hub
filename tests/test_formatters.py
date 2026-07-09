@@ -4,7 +4,6 @@ The project doesn't have a separate formatters module; formatting logic
 lives in core.reporter._to_markdown.  This test file covers edge cases
 in that formatting path.
 """
-import pytest
 from suika_hub.core.reporter import Reporter
 
 
@@ -17,7 +16,7 @@ class TestMarkdownEdgeCases:
 
     def test_empty_results(self):
         md = self._fmt({})
-        assert "# Suika Hunter - Scan Report" in md
+        assert "# suika-hub Scan Report" in md
         assert "N/A" in md  # target defaults to N/A
 
     def test_no_stats_key(self):
@@ -74,7 +73,7 @@ class TestMarkdownEdgeCases:
 
     def test_report_structure_sections(self):
         md = self._fmt({"target": "t", "stats": {}, "modules_executed": ["recon"], "findings": []})
-        assert "# Suika Hunter - Scan Report" in md
+        assert "# suika-hub Scan Report" in md
         assert "**Target:**" in md
         assert "**Date:**" in md
         assert "**Duration:**" in md

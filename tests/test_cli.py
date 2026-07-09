@@ -1,12 +1,9 @@
 """Tests for CLI integration – suika_hub.cli typer app."""
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 from typer.testing import CliRunner
 
-from suika_hub.cli import app, build_engine, banner
-
+from suika_hub.cli import app, banner, build_engine
 
 runner = CliRunner()
 

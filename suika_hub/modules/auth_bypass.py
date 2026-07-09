@@ -185,9 +185,8 @@ class AuthBypassScanner(BaseModule):
 
                 if resp["status"] == 200:
                     body = resp.get("body", {})
-                    if isinstance(body, dict):
-                        # Check if role actually changed
-                        if body.get("role") == "admin" or body.get("is_admin") is True:
+                    # Check if role actually changed
+                    if isinstance(body, dict) and (body.get("role") == "admin" or body.get("is_admin") is True):
                             self.add_finding(
                                 severity="CRITICAL",
                                 title=f"Privilege escalation: mass assignment at {ep}",

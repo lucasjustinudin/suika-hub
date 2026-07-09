@@ -1,12 +1,10 @@
 """Tests for core.engine – SuikaEngine."""
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from suika_hub.core.engine import SuikaEngine
 from suika_hub.core.module import BaseModule, Finding
-
 
 # ---------------------------------------------------------------------------
 # Stub modules
@@ -114,7 +112,7 @@ class TestSuikaEngineHelpers:
 class TestSuikaEngineRun:
     @pytest.mark.asyncio
     async def test_run_single_module(self, tmp_path):
-        from core.config import ScanConfig, AuthConfig
+        from suika_hub.core.config import AuthConfig, ScanConfig
 
         engine = SuikaEngine()
         engine.register(StubModuleA)
@@ -129,13 +127,13 @@ class TestSuikaEngineRun:
         )
 
         # Mock AsyncClient to avoid real HTTP
-        with patch("core.engine.AsyncClient") as MockClient:
+        with patch("suika_hub.core.engine.AsyncClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
             MockClient.return_value = mock_instance
 
-            with patch("core.engine.Reporter") as MockReporter:
+            with patch("suika_hub.core.engine.Reporter") as MockReporter:
                 mock_reporter = MagicMock()
                 MockReporter.return_value = mock_reporter
 
@@ -148,7 +146,7 @@ class TestSuikaEngineRun:
 
     @pytest.mark.asyncio
     async def test_run_multiple_modules(self, tmp_path):
-        from core.config import ScanConfig, AuthConfig
+        from suika_hub.core.config import AuthConfig, ScanConfig
 
         engine = SuikaEngine()
         engine.register(StubModuleA)
@@ -163,13 +161,13 @@ class TestSuikaEngineRun:
             output_dir=str(tmp_path),
         )
 
-        with patch("core.engine.AsyncClient") as MockClient:
+        with patch("suika_hub.core.engine.AsyncClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
             MockClient.return_value = mock_instance
 
-            with patch("core.engine.Reporter"):
+            with patch("suika_hub.core.engine.Reporter"):
                 result = await engine.run(config)
 
         assert len(result["modules_executed"]) == 2
@@ -177,7 +175,7 @@ class TestSuikaEngineRun:
 
     @pytest.mark.asyncio
     async def test_run_unknown_module_skipped(self, tmp_path):
-        from core.config import ScanConfig, AuthConfig
+        from suika_hub.core.config import AuthConfig, ScanConfig
 
         engine = SuikaEngine()
         engine.register(StubModuleA)
@@ -190,13 +188,13 @@ class TestSuikaEngineRun:
             output_dir=str(tmp_path),
         )
 
-        with patch("core.engine.AsyncClient") as MockClient:
+        with patch("suika_hub.core.engine.AsyncClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
             MockClient.return_value = mock_instance
 
-            with patch("core.engine.Reporter"):
+            with patch("suika_hub.core.engine.Reporter"):
                 result = await engine.run(config)
 
         assert "nonexistent" not in result["modules_executed"]
@@ -204,7 +202,7 @@ class TestSuikaEngineRun:
 
     @pytest.mark.asyncio
     async def test_run_module_error_caught(self, tmp_path):
-        from core.config import ScanConfig, AuthConfig
+        from suika_hub.core.config import AuthConfig, ScanConfig
 
         engine = SuikaEngine()
         engine.register(ErrorModule)
@@ -217,13 +215,13 @@ class TestSuikaEngineRun:
             output_dir=str(tmp_path),
         )
 
-        with patch("core.engine.AsyncClient") as MockClient:
+        with patch("suika_hub.core.engine.AsyncClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
             MockClient.return_value = mock_instance
 
-            with patch("core.engine.Reporter"):
+            with patch("suika_hub.core.engine.Reporter"):
                 result = await engine.run(config)
 
         # Error module should not crash the engine
