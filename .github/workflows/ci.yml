@@ -90,3 +90,8 @@ jobs:
 
       - name: Verify all imports
         run: python scripts/verify_imports.py
+
+  probe-check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "probe"
