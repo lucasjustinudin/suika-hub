@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: pip install ruff
 
-      - name: Run Ruff check
+      - name: Lint
         run: ruff check suika_hub/ tests/
 
       - name: Run Ruff format check
