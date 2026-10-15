@@ -26,7 +26,7 @@ class SuikaEngine:
         """Register a module class"""
         instance = module_class()
         self.modules[instance.name] = instance
-        # Auto alias: "redstorm_scanner" -> "redstorm"
+        # Auto alias: "graphql_scanner" -> "graphql"
         short = instance.name.replace("_scanner", "").replace("_module", "")
         self.aliases[short] = instance.name
         self.aliases[instance.name] = instance.name

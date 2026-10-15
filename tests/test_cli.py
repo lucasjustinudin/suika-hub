@@ -13,7 +13,7 @@ class TestBuildEngine:
     def test_build_engine_registers_all_modules(self):
         engine = build_engine()
         expected = [
-            "redstorm_scanner",
+            "graphql_scanner",
             "idor_scanner",
             "recon_scanner",
             "api_fuzzer",
@@ -27,7 +27,7 @@ class TestBuildEngine:
     def test_aliases_created(self):
         engine = build_engine()
         # Aliases are created by stripping _scanner and _module suffixes
-        assert "redstorm" in engine.aliases
+        assert "graphql" in engine.aliases
         assert "idor" in engine.aliases
         assert "recon" in engine.aliases
         # api_fuzzer, auth_bypass, upload_scanner don't have _scanner suffix for all
@@ -50,7 +50,7 @@ class TestModulesCommand:
         result = runner.invoke(app, ["modules"])
         assert result.exit_code == 0
         # Should list all 7 modules
-        assert "redstorm" in result.output
+        assert "graphql" in result.output
         assert "idor" in result.output
         assert "recon" in result.output
 
@@ -133,7 +133,7 @@ class TestScanCommand:
                 "-t",
                 "https://example.com",
                 "-m",
-                "redstorm,idor,recon,api,auth,upload,ssrf",
+                "graphql,idor,recon,api,auth,upload,ssrf",
             ],
         )
         assert result.exit_code == 0
@@ -141,8 +141,8 @@ class TestScanCommand:
 
 class TestRecommendCommand:
     @patch("suika_hub.cli.console")
-    def test_recommend_redstorm(self, mock_console):
-        result = runner.invoke(app, ["recommend", "--target", "redstorm"])
+    def test_recommend_profile(self, mock_console):
+        result = runner.invoke(app, ["recommend", "--target", "nodejs"])
         assert result.exit_code == 0
 
     @patch("suika_hub.cli.console")

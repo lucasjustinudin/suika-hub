@@ -21,7 +21,6 @@ from suika_hub.modules import (
     IDORScanner,
     JWTScanner,
     ReconScanner,
-    RedStormScanner,
     SSRFScanner,
 )
 
@@ -47,7 +46,6 @@ def banner():
 def build_engine() -> SuikaEngine:
     """Build engine with all modules registered"""
     engine = SuikaEngine()
-    engine.register(RedStormScanner)
     engine.register(IDORScanner)
     engine.register(ReconScanner)
     engine.register(APIFuzzer)
@@ -66,7 +64,7 @@ def scan(
         ...,
         "--module",
         "-m",
-        help="Modules: redstorm,idor,recon,api,auth,upload,ssrf,graphql,jwt (comma-separated)",
+        help="Modules: idor,recon,api,auth,upload,ssrf,graphql,jwt (comma-separated)",
     ),
     cookie: str | None = typer.Option(None, "--cookie", help="Session cookie: 'key=val; key2=val2'"),
     har: str | None = typer.Option(None, "--har", help="HAR file path to import session"),
@@ -163,7 +161,6 @@ def modules():
     table.add_column("Description")
 
     mods = [
-        ("redstorm", "redstorm_scanner", "RedStorm platform (leaderboard IDOR, program enum, endpoint testing)"),
         ("idor", "idor_scanner", "Generic IDOR with pattern detection + baseline comparison"),
         ("recon", "recon_scanner", "Subdomain enum + endpoint discovery + tech fingerprinting"),
         ("api", "api_fuzzer", "SQLi, NoSQL injection, XSS, boundary testing"),
@@ -178,13 +175,18 @@ def modules():
         table.add_row(alias, name, desc)
 
     console.print(table)
-    console.print("\n[dim]Combine: --module redstorm,idor,auth,ssrf[/dim]")
-    console.print("[dim]All:     --module redstorm,idor,recon,api,auth,upload,ssrf,graphql,jwt[/dim]")
+    console.print("\n[dim]Combine: --module idor,auth,ssrf,graphql[/dim]")
+    console.print("[dim]All:     --module idor,recon,api,auth,upload,ssrf,graphql,jwt[/dim]")
 
 
 @app.command()
 def recommend(
-    target: str = typer.Option("redstorm", "--target", "-t", help="Target profile: redstorm, web, api"),
+    target: str = typer.Option(
+        "nodejs",
+        "--target",
+        "-t",
+        help="Target profile: nodejs, python, php, java, spa",
+    ),
     time_budget: int = typer.Option(300, "--time", help="Time budget in seconds"),
 ):
     """AI-powered module recommendation based on target profile"""
@@ -194,13 +196,13 @@ def recommend(
 
     engine = DecisionEngine()
 
-    if target == "redstorm":
-        recommendations = engine.recommend_for_redstorm()
-    else:
+    recommendations = engine.recommend_for_profile(target)
+    if not recommendations:
+        # Unknown profile name: treat the value as a bare domain and score it
+        # with the default stack assumptions rather than erroring out.
         from suika_hub.core.decision_engine import TargetProfile
 
-        profile = TargetProfile(domain=target)
-        recommendations = engine.recommend_modules(profile, time_budget)
+        recommendations = engine.recommend_modules(TargetProfile(domain=target), time_budget)
 
     table = Table(title="Recommended Scan Strategy", border_style="red")
     table.add_column("#", style="dim", width=3)
@@ -226,7 +228,7 @@ def recommend(
     )
     total_time = sum(r["time_estimate"] for r in recommendations)
     console.print("\n[bold]Suggested command:[/bold]")
-    console.print(f"  suika-hub scan -t https://www.redstorm.io -m {module_list} --cookie 'session=xxx'")
+    console.print(f"  suika-hub scan -t https://example.com -m {module_list} --cookie 'session=xxx'")
     console.print(f"\n[dim]Estimated time: {total_time}s ({total_time // 60}m {total_time % 60}s)[/dim]")
 
 

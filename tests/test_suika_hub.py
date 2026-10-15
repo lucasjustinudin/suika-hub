@@ -52,13 +52,15 @@ class TestImports:
             APIFuzzer,
             AuthBypassScanner,
             FileUploadScanner,
+            GraphQLScanner,
             IDORScanner,
+            JWTScanner,
             ReconScanner,
-            RedStormScanner,
             SSRFScanner,
         )
 
-        assert RedStormScanner is not None
+        assert GraphQLScanner is not None
+        assert JWTScanner is not None
         assert IDORScanner is not None
         assert ReconScanner is not None
         assert APIFuzzer is not None
@@ -137,30 +139,30 @@ class TestEngine:
 
     def test_engine_registration(self):
         from suika_hub.core.engine import SuikaEngine
-        from suika_hub.modules import IDORScanner, RedStormScanner
+        from suika_hub.modules import IDORScanner, JWTScanner
 
         engine = SuikaEngine()
-        engine.register(RedStormScanner)
+        engine.register(JWTScanner)
         engine.register(IDORScanner)
 
         assert len(engine.modules) == 2
-        assert "redstorm_scanner" in engine.modules
+        assert "jwt_scanner" in engine.modules
         assert "idor_scanner" in engine.modules
 
     def test_engine_alias_resolution(self):
         from suika_hub.core.engine import SuikaEngine
-        from suika_hub.modules import RedStormScanner
+        from suika_hub.modules import GraphQLScanner
 
         engine = SuikaEngine()
-        engine.register(RedStormScanner)
+        engine.register(GraphQLScanner)
 
         # Should resolve by alias
-        module = engine.resolve("redstorm")
+        module = engine.resolve("graphql")
         assert module is not None
-        assert module.name == "redstorm_scanner"
+        assert module.name == "graphql_scanner"
 
         # Should resolve by full name
-        module = engine.resolve("redstorm_scanner")
+        module = engine.resolve("graphql_scanner")
         assert module is not None
 
         # Should return None for unknown
@@ -173,25 +175,36 @@ class TestEngine:
             APIFuzzer,
             AuthBypassScanner,
             FileUploadScanner,
+            GraphQLScanner,
             IDORScanner,
+            JWTScanner,
             ReconScanner,
-            RedStormScanner,
             SSRFScanner,
         )
 
         engine = SuikaEngine()
-        engine.register(RedStormScanner)
+        engine.register(GraphQLScanner)
         engine.register(IDORScanner)
         engine.register(ReconScanner)
         engine.register(APIFuzzer)
         engine.register(AuthBypassScanner)
         engine.register(FileUploadScanner)
         engine.register(SSRFScanner)
+        engine.register(JWTScanner)
 
-        assert len(engine.modules) == 7
+        assert len(engine.modules) == 8
 
         # All aliases should work
-        for alias in ["redstorm", "idor", "recon", "api_fuzzer", "auth_bypass", "upload_scanner", "ssrf"]:
+        for alias in [
+            "graphql",
+            "idor",
+            "recon",
+            "api_fuzzer",
+            "auth_bypass",
+            "upload_scanner",
+            "ssrf",
+            "jwt",
+        ]:
             module = engine.resolve(alias)
             assert module is not None, f"Failed to resolve alias: {alias}"
 
@@ -199,11 +212,11 @@ class TestEngine:
 class TestDecisionEngine:
     """Test the decision engine recommendations."""
 
-    def test_redstorm_recommendations(self):
+    def test_profile_recommendations(self):
         from suika_hub.core.decision_engine import DecisionEngine
 
         engine = DecisionEngine()
-        recs = engine.recommend_for_redstorm()
+        recs = engine.recommend_for_profile("nodejs")
         assert len(recs) > 0
         assert all("module" in r for r in recs)
         assert all("score" in r for r in recs)

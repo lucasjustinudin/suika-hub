@@ -6,7 +6,7 @@ Async, modular web security scanning toolkit for authorized security research.
 
 ## Status
 
-- Package: beta (`2.0.0`)
+- Package: beta (`2.1.0`)
 - Python: 3.10+ (CI covers 3.10-3.13)
 - Scope: authorized testing only
 - Output: JSON and Markdown reports
@@ -23,7 +23,7 @@ Async, modular web security scanning toolkit for authorized security research.
 - **Differential findings** -- checks that mutate a request compare against a control request instead of pattern-matching a string
 - Report generation in JSON and Markdown, including HTTP/retry/proxy statistics
 - Optional OpenAI-compatible AI analyzer
-- 400-test suite plus GitHub Actions CI (lint, format, types, tests, import check, build)
+- 387-test suite plus GitHub Actions CI (lint, format, types, tests, import check, build)
 
 ## Install
 
@@ -68,6 +68,13 @@ suika-hub scan -t https://example.com -m graphql --graphql-endpoint https://exam
 suika-hub scan -t https://example.com -m jwt --jwt 'eyJhbGciOi...'
 ```
 
+Recommend a module set for a target profile (the profile describes a stack
+shape, not a specific host):
+
+```bash
+suika-hub recommend --target spa      # nodejs, python, php, java, spa
+```
+
 Import a HAR file to reuse a browser session:
 
 ```bash
@@ -84,7 +91,6 @@ suika-hub import-har ./session.har --domain example.com
 | `auth` | `auth_bypass` | auth bypass, privilege escalation, mass assignment |
 | `upload` | `upload_scanner` | file upload validation bypass |
 | `ssrf` | `ssrf_scanner` | SSRF, cloud metadata, protocol smuggling |
-| `redstorm` | `redstorm_scanner` | RedStorm-specific helper checks |
 | `graphql` | `graphql_scanner` | introspection, alias batching, complexity limits |
 | `jwt` | `jwt_scanner` | `alg:none`, weak HMAC secret, claim tampering |
 
@@ -139,6 +145,13 @@ All five gates run in CI on every push and pull request.
 - **Per-host limits, not one global delay.** A single global sleep makes a scan with one slow host as slow as a scan with fifty. `RateLimiter` keys a token bucket per hostname and reserves tokens so concurrent callers wake at staggered times rather than all firing at once.
 - **Retries honour `Retry-After`.** A `429` retried on the scanner's own schedule is how an IP gets banned. The retry policy reads the header (both delta-seconds and HTTP-date forms) and caps it at `max_delay`.
 - **Only transient failures are retried.** 4xx responses other than `429` are deterministic rejections; retrying them wastes budget and looks like an attack.
+- **Recommendations are profile-based, not target-based.** `recommend --target`
+  takes a stack shape (`nodejs`, `python`, `php`, `java`, `spa`) and scores the
+  shipped modules against it. A module that directly matches detected technology
+  (GraphQL scanner on a GraphQL API, JWT scanner on JWT auth) gets a relevance
+  floor before its multiplier, because the stack-derived vulnerability priority
+  list often shares no key with that module's effectiveness table -- without the
+  floor the multiplier applies to zero and the most relevant module ranks last.
 - **A WAF block is not a finding.** It is returned as `error="waf_blocked"` with the identified vendor, so modules skip rather than reporting the block page as a vulnerability.
 
 ## Safety

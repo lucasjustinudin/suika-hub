@@ -49,7 +49,46 @@ class TestConstants:
     def test_module_effectiveness_keys(self):
         assert "idor_scanner" in MODULE_EFFECTIVENESS
         assert "api_fuzzer" in MODULE_EFFECTIVENESS
-        assert len(MODULE_EFFECTIVENESS) == 7
+
+    def test_every_registered_module_is_scored(self):
+        """A module missing from MODULE_EFFECTIVENESS can never be recommended.
+
+        Asserting the set of shipped modules rather than a hardcoded count: a
+        new module must be added to the scoring table, and a bare number would
+        just be edited to match instead of catching the omission.
+        """
+        from suika_hub.modules import (
+            APIFuzzer,
+            AuthBypassScanner,
+            FileUploadScanner,
+            GraphQLScanner,
+            IDORScanner,
+            JWTScanner,
+            ReconScanner,
+            SSRFScanner,
+        )
+
+        shipped = {
+            cls.name
+            for cls in (
+                APIFuzzer,
+                AuthBypassScanner,
+                FileUploadScanner,
+                GraphQLScanner,
+                IDORScanner,
+                JWTScanner,
+                ReconScanner,
+                SSRFScanner,
+            )
+        }
+        assert shipped == set(MODULE_EFFECTIVENESS), (
+            f"modules missing from MODULE_EFFECTIVENESS: {shipped - set(MODULE_EFFECTIVENESS)}; "
+            f"stale entries: {set(MODULE_EFFECTIVENESS) - shipped}"
+        )
+
+    def test_every_module_has_a_time_estimate(self):
+        missing = set(MODULE_EFFECTIVENESS) - set(MODULE_TIME_ESTIMATE)
+        assert not missing, f"modules without a time estimate: {missing}"
 
     def test_module_time_estimates(self):
         for _name, t in MODULE_TIME_ESTIMATE.items():
@@ -117,24 +156,54 @@ class TestRecommendModules:
         assert upload_with["score"] > upload_without["score"]
 
 
-class TestRecommendForRedstorm:
+class TestRecommendForProfile:
     def test_returns_list(self):
         engine = DecisionEngine()
-        recs = engine.recommend_for_redstorm()
+        recs = engine.recommend_for_profile("nodejs")
         assert isinstance(recs, list)
         assert len(recs) > 0
 
     def test_has_notes_for_key_modules(self):
         engine = DecisionEngine()
-        recs = engine.recommend_for_redstorm()
+        recs = engine.recommend_for_profile("nodejs")
         modules_with_notes = {r["module"] for r in recs if "notes" in r}
-        assert "redstorm_scanner" in modules_with_notes or "api_fuzzer" in modules_with_notes
+        assert "api_fuzzer" in modules_with_notes
 
-    def test_redstorm_module_present(self):
+    def test_technology_matched_modules_rank_highly(self):
+        """Regression: a module targeting the detected tech must not score zero.
+
+        The vuln-priority list is derived from the stack and shares no key with
+        the module's effectiveness table for some profiles, so a pure
+        multiplier left graphql/jwt at 0.00 for the exact profile that detects
+        GraphQL/JWT. A relevance floor keeps them in contention.
+        """
         engine = DecisionEngine()
-        recs = engine.recommend_for_redstorm()
+        recs = engine.recommend_for_profile("spa")
+        by_module = {r["module"]: r["score"] for r in recs}
+        assert by_module["graphql_scanner"] > 0, "graphql scored zero on a graphql profile"
+        assert by_module["jwt_scanner"] > 0, "jwt scored zero on a jwt profile"
+
+        # And they must actually rank near the top, not merely be non-zero.
+        ranked = [r["module"] for r in recs]
+        assert ranked.index("graphql_scanner") < 3
+        assert ranked.index("jwt_scanner") < 3
+
+    def test_profile_notes_are_attached(self):
+        engine = DecisionEngine()
+        recs = engine.recommend_for_profile("spa")
+        noted = {r["module"] for r in recs if "notes" in r}
+        assert "graphql_scanner" in noted
+        assert "jwt_scanner" in noted
+
+    def test_unknown_profile_returns_empty(self):
+        """An unknown name must be distinguishable from a profile with no modules."""
+        assert DecisionEngine().recommend_for_profile("no-such-profile") == []
+
+    def test_profile_module_present(self):
+        engine = DecisionEngine()
+        recs = engine.recommend_for_profile("nodejs")
         module_names = [r["module"] for r in recs]
-        assert "redstorm_scanner" in module_names
+        assert "api_fuzzer" in module_names
 
 
 class TestAnalyzeFindings:

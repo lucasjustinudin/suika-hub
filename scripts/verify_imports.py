@@ -58,7 +58,6 @@ from suika_hub.modules import (
     IDORScanner,
     JWTScanner,
     ReconScanner,
-    RedStormScanner,
     SSRFScanner,
 )
 
@@ -66,7 +65,6 @@ print("  suika_hub.modules OK")
 
 # Register every module and confirm aliases resolve.
 ENGINE_MODULES = [
-    RedStormScanner,
     IDORScanner,
     ReconScanner,
     APIFuzzer,

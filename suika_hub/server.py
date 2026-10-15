@@ -84,7 +84,7 @@ async def receive_session(request):
     console.print(f"  Endpoints: {len(session.get('endpoints', []))}")
     console.print(f"  Saved: {filename}")
     console.print("  [cyan]Ready to scan! Run:[/cyan]")
-    console.print(f"  suika-hub scan -t https://{domain} -m redstorm --session {filename}\n")
+    console.print(f"  suika-hub scan -t https://{domain} -m idor,api --session {filename}\n")
 
     return web.json_response(
         {
@@ -122,7 +122,7 @@ async def trigger_scan(request):
     """Trigger scan from extension (auto-scan on session export)"""
     data = await request.json()
     domain = data.get("domain")
-    modules = data.get("modules", ["redstorm"])
+    modules = data.get("modules", ["idor", "api"])
 
     if domain not in captured_sessions:
         return web.json_response({"error": "No session captured for domain"}, status=400)
@@ -131,7 +131,7 @@ async def trigger_scan(request):
 
     from suika_hub.core.config import AuthConfig, ScanConfig
     from suika_hub.core.engine import SuikaEngine
-    from suika_hub.modules import APIFuzzer, AuthBypassScanner, IDORScanner, ReconScanner, RedStormScanner
+    from suika_hub.modules import APIFuzzer, AuthBypassScanner, IDORScanner, ReconScanner
 
     config = ScanConfig(
         target=f"https://{domain}",
@@ -145,7 +145,6 @@ async def trigger_scan(request):
     )
 
     engine = SuikaEngine()
-    engine.register(RedStormScanner)
     engine.register(IDORScanner)
     engine.register(ReconScanner)
     engine.register(APIFuzzer)
