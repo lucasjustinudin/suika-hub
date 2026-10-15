@@ -1,4 +1,5 @@
 """Tests for CLI integration – suika_hub.cli typer app."""
+
 from unittest.mock import MagicMock, patch
 
 from typer.testing import CliRunner
@@ -61,11 +62,16 @@ class TestScanCommand:
         mock_engine = MagicMock()
         mock_build.return_value = mock_engine
 
-        result = runner.invoke(app, [
-            "scan",
-            "--target", "https://example.com",
-            "--module", "recon",
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "scan",
+                "--target",
+                "https://example.com",
+                "--module",
+                "recon",
+            ],
+        )
         assert result.exit_code == 0
         mock_build.assert_called_once()
         mock_run.assert_called_once()
@@ -75,12 +81,18 @@ class TestScanCommand:
     def test_scan_with_cookie(self, mock_build, mock_run):
         mock_build.return_value = MagicMock()
 
-        result = runner.invoke(app, [
-            "scan",
-            "-t", "https://example.com",
-            "-m", "recon,idor",
-            "--cookie", "session=abc123; csrf=xyz",
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "scan",
+                "-t",
+                "https://example.com",
+                "-m",
+                "recon,idor",
+                "--cookie",
+                "session=abc123; csrf=xyz",
+            ],
+        )
         assert result.exit_code == 0
 
     @patch("suika_hub.cli.asyncio.run")
@@ -88,16 +100,25 @@ class TestScanCommand:
     def test_scan_with_options(self, mock_build, mock_run):
         mock_build.return_value = MagicMock()
 
-        result = runner.invoke(app, [
-            "scan",
-            "-t", "https://example.com",
-            "-m", "recon",
-            "--delay", "0.5",
-            "--concurrency", "10",
-            "--timeout", "30",
-            "--output", "/tmp/reports",
-            "--verbose",
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "scan",
+                "-t",
+                "https://example.com",
+                "-m",
+                "recon",
+                "--delay",
+                "0.5",
+                "--concurrency",
+                "10",
+                "--timeout",
+                "30",
+                "--output",
+                "/tmp/reports",
+                "--verbose",
+            ],
+        )
         assert result.exit_code == 0
 
     @patch("suika_hub.cli.asyncio.run")
@@ -105,11 +126,16 @@ class TestScanCommand:
     def test_scan_multiple_modules(self, mock_build, mock_run):
         mock_build.return_value = MagicMock()
 
-        result = runner.invoke(app, [
-            "scan",
-            "-t", "https://example.com",
-            "-m", "redstorm,idor,recon,api,auth,upload,ssrf",
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "scan",
+                "-t",
+                "https://example.com",
+                "-m",
+                "redstorm,idor,recon,api,auth,upload,ssrf",
+            ],
+        )
         assert result.exit_code == 0
 
 

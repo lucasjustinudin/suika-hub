@@ -17,7 +17,9 @@ from suika_hub.modules import (
     APIFuzzer,
     AuthBypassScanner,
     FileUploadScanner,
+    GraphQLScanner,
     IDORScanner,
+    JWTScanner,
     ReconScanner,
     RedStormScanner,
     SSRFScanner,
@@ -28,16 +30,18 @@ console = Console()
 
 
 def banner():
-    console.print(Panel.fit(
-        "[bold red]"
-        "  ___       _ _           _  _          _           \n"
-        " / __|_  _ (_) |____ _   | || |_  _ _ _| |_ ___ _ _ \n"
-        " \\__ \\ || | | / / _` |  | __ | || | ' \\  _/ -_) '_|\n"
-        " |___/\\_,_|_|_\\_\\__,_|  |_||_|\\_,_|_||_\\__\\___|_|  \n"
-        "[/bold red]\n"
-        "[dim]v2.0 - Async | Modular | AI-Powered | 7 Modules[/dim]",
-        border_style="red",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold red]"
+            "  ___       _ _           _  _          _           \n"
+            " / __|_  _ (_) |____ _   | || |_  _ _ _| |_ ___ _ _ \n"
+            " \\__ \\ || | | / / _` |  | __ | || | ' \\  _/ -_) '_|\n"
+            " |___/\\_,_|_|_\\_\\__,_|  |_||_|\\_,_|_||_\\__\\___|_|  \n"
+            "[/bold red]\n"
+            "[dim]v2.0 - Async | Modular | AI-Powered | 9 Modules[/dim]",
+            border_style="red",
+        )
+    )
 
 
 def build_engine() -> SuikaEngine:
@@ -50,19 +54,33 @@ def build_engine() -> SuikaEngine:
     engine.register(AuthBypassScanner)
     engine.register(FileUploadScanner)
     engine.register(SSRFScanner)
+    engine.register(GraphQLScanner)
+    engine.register(JWTScanner)
     return engine
 
 
 @app.command()
 def scan(
     target: str = typer.Option(..., "--target", "-t", help="Target URL or domain"),
-    module: str = typer.Option(..., "--module", "-m", help="Modules: redstorm,idor,recon,api,auth,upload,ssrf (comma-separated)"),
+    module: str = typer.Option(
+        ...,
+        "--module",
+        "-m",
+        help="Modules: redstorm,idor,recon,api,auth,upload,ssrf,graphql,jwt (comma-separated)",
+    ),
     cookie: str | None = typer.Option(None, "--cookie", help="Session cookie: 'key=val; key2=val2'"),
     har: str | None = typer.Option(None, "--har", help="HAR file path to import session"),
     session: str | None = typer.Option(None, "--session", help="Session JSON from capture server"),
+    jwt: str | None = typer.Option(None, "--jwt", help="JWT to test (jwt module)"),
+    graphql_endpoint: str | None = typer.Option(
+        None, "--graphql-endpoint", help="Explicit GraphQL endpoint (graphql module)"
+    ),
+    proxies: str | None = typer.Option(None, "--proxies", help="Comma-separated proxy list to rotate"),
+    rate_limit: float = typer.Option(5.0, "--rate-limit", help="Max requests/second per host (0 disables)"),
     delay: float = typer.Option(1.5, "--delay", "-d", help="Delay between requests (seconds)"),
     concurrency: int = typer.Option(5, "--concurrency", "-c", help="Max concurrent requests"),
     timeout: int = typer.Option(10, "--timeout", help="Request timeout (seconds)"),
+    proxy: str | None = typer.Option(None, "--proxy", help="Single upstream proxy"),
     output: str = typer.Option("reports", "--output", "-o", help="Output directory"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
     browser: bool = typer.Option(False, "--browser", "-b", help="Use browser for Cloudflare bypass"),
@@ -84,6 +102,7 @@ def scan(
     if har:
         try:
             from suika_hub.core.har_parser import HARParser
+
             parser = HARParser(har)
             session_data = parser.get_session_info()
             cookies.update(session_data.get("cookies", {}))
@@ -97,6 +116,7 @@ def scan(
         try:
             import json
             from pathlib import Path
+
             session_data = json.loads(Path(session).read_text())
             cookies.update(session_data.get("cookies", {}))
             headers.update(session_data.get("headers", {}))
@@ -105,6 +125,12 @@ def scan(
             console.print(f"[red]Session import failed: {e}[/red]")
 
     # Build config
+    extra: dict = {}
+    if jwt:
+        extra["jwt"] = jwt
+    if graphql_endpoint:
+        extra["graphql_endpoints"] = [graphql_endpoint]
+
     config = ScanConfig(
         target=target,
         modules=[m.strip() for m in module.split(",")],
@@ -115,6 +141,10 @@ def scan(
         use_browser=browser,
         output_dir=output,
         verbose=verbose,
+        proxy=proxy,
+        proxies=[p.strip() for p in proxies.split(",") if p.strip()] if proxies else [],
+        rate_limit=rate_limit,
+        extra=extra,
     )
 
     # Build engine and run
@@ -140,6 +170,8 @@ def modules():
         ("auth", "auth_bypass", "Auth bypass, privilege escalation, method tampering, mass assignment"),
         ("upload", "upload_scanner", "File upload bypass: double ext, null byte, polyglot, content-type"),
         ("ssrf", "ssrf_scanner", "SSRF: internal access, cloud metadata, protocol smuggling, bypass"),
+        ("graphql", "graphql_scanner", "GraphQL: introspection, alias batching, complexity limits"),
+        ("jwt", "jwt_scanner", "JWT: alg confusion, none-alg, weak HMAC secret, claim tampering"),
     ]
 
     for alias, name, desc in mods:
@@ -147,7 +179,7 @@ def modules():
 
     console.print(table)
     console.print("\n[dim]Combine: --module redstorm,idor,auth,ssrf[/dim]")
-    console.print("[dim]All:     --module redstorm,idor,recon,api,auth,upload,ssrf[/dim]")
+    console.print("[dim]All:     --module redstorm,idor,recon,api,auth,upload,ssrf,graphql,jwt[/dim]")
 
 
 @app.command()
@@ -166,6 +198,7 @@ def recommend(
         recommendations = engine.recommend_for_redstorm()
     else:
         from suika_hub.core.decision_engine import TargetProfile
+
         profile = TargetProfile(domain=target)
         recommendations = engine.recommend_modules(profile, time_budget)
 
@@ -188,11 +221,13 @@ def recommend(
     console.print(table)
 
     # Generate command
-    module_list = ",".join(r["module"].replace("_scanner", "").replace("_fuzzer", "").replace("_bypass", "") for r in recommendations)
+    module_list = ",".join(
+        r["module"].replace("_scanner", "").replace("_fuzzer", "").replace("_bypass", "") for r in recommendations
+    )
     total_time = sum(r["time_estimate"] for r in recommendations)
     console.print("\n[bold]Suggested command:[/bold]")
     console.print(f"  suika-hub scan -t https://www.redstorm.io -m {module_list} --cookie 'session=xxx'")
-    console.print(f"\n[dim]Estimated time: {total_time}s ({total_time//60}m {total_time%60}s)[/dim]")
+    console.print(f"\n[dim]Estimated time: {total_time}s ({total_time // 60}m {total_time % 60}s)[/dim]")
 
 
 @app.command()
@@ -203,6 +238,7 @@ def server(
     """Start capture server (receives data from browser extension)"""
     banner()
     from suika_hub.server import run_server
+
     run_server(host=host, port=port)
 
 

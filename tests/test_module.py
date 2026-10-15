@@ -1,4 +1,5 @@
 """Tests for core.module – Finding and BaseModule."""
+
 import pytest
 
 from suika_hub.core.module import BaseModule, Finding
@@ -37,6 +38,7 @@ class TestFinding:
 
 class ConcreteModule(BaseModule):
     """Minimal concrete implementation for testing."""
+
     name = "test_module"
     description = "Test"
 
@@ -71,9 +73,11 @@ class TestBaseModule:
     @pytest.mark.asyncio
     async def test_execute(self):
         mod = ConcreteModule()
+
         # Mock client
         class FakeClient:
             pass
+
         findings = await mod.execute("https://target.com", FakeClient(), {})
         assert len(findings) == 1
         assert findings[0]["url"] == "https://target.com"

@@ -1,4 +1,5 @@
 """Tests for suika_hub.core.http – AsyncClient."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock
 
@@ -6,6 +7,7 @@ import httpx
 import pytest
 
 from suika_hub.core.http import USER_AGENTS, AsyncClient
+from suika_hub.core.retry import RetryPolicy
 
 
 class TestUserAgents:
@@ -55,7 +57,9 @@ class TestAsyncClientRequests:
 
     @pytest.fixture
     def client(self):
-        c = AsyncClient(delay=0)
+        # max_attempts=1 keeps these tests about single-response mapping; retry
+        # behaviour has its own coverage in TestRetryPolicy.
+        c = AsyncClient(delay=0, retry_policy=RetryPolicy(max_attempts=1))
         return c
 
     def _mock_httpx_response(self, status=200, text="OK", headers=None, content=None):
@@ -126,7 +130,9 @@ class TestAsyncClientRequests:
 
     @pytest.mark.asyncio
     async def test_post(self, client):
-        mock_resp = self._mock_httpx_response(status=201, text='{"id": 1}', headers={"content-type": "application/json"})
+        mock_resp = self._mock_httpx_response(
+            status=201, text='{"id": 1}', headers={"content-type": "application/json"}
+        )
         client.client.request = AsyncMock(return_value=mock_resp)
         result = await client.post("https://example.com/api/items", json={"name": "test"})
         assert result["status"] == 201
@@ -134,7 +140,7 @@ class TestAsyncClientRequests:
 
     @pytest.mark.asyncio
     async def test_put(self, client):
-        mock_resp = self._mock_httpx_response(status=200, text='{}', headers={"content-type": "application/json"})
+        mock_resp = self._mock_httpx_response(status=200, text="{}", headers={"content-type": "application/json"})
         client.client.request = AsyncMock(return_value=mock_resp)
         result = await client.put("https://example.com/api/items/1", json={"name": "updated"})
         assert result["status"] == 200
@@ -182,7 +188,7 @@ class TestCloudflareDetection:
 
     def test_detect_cf_403_browser_verification(self):
         client = AsyncClient.__new__(AsyncClient)
-        resp = self._make_response(403, '<script>cf-browser-verification</script>')
+        resp = self._make_response(403, "<script>cf-browser-verification</script>")
         assert client._is_cloudflare_challenge(resp) is True
 
     def test_detect_cf_503_cloudflare(self):
@@ -200,16 +206,28 @@ class TestCloudflareDetection:
         resp = self._make_response(404, "Not Found")
         assert client._is_cloudflare_challenge(resp) is False
 
+    def test_detect_waf_identifies_vendor(self):
+        """detect_waf reports which product blocked, not just that one did."""
+        client = AsyncClient.__new__(AsyncClient)
+        assert client.detect_waf(self._make_response(403, "Incapsula incident ID")) == "imperva"
+        assert client.detect_waf(self._make_response(403, "datadome challenge")) == "datadome"
+
+    def test_detect_waf_ignores_benign_status(self):
+        """A 200 that merely mentions a vendor is not a block page."""
+        client = AsyncClient.__new__(AsyncClient)
+        assert client.detect_waf(self._make_response(200, "we use cloudflare")) is None
+
     @pytest.mark.asyncio
-    async def test_cloudflare_challenge_response_format(self):
-        """When CF challenge detected, response should contain error field."""
-        client = AsyncClient(delay=0)
+    async def test_waf_block_response_format(self):
+        """When a WAF block is detected, the response carries error + waf fields."""
+        client = AsyncClient(delay=0, retry_policy=RetryPolicy(max_attempts=1))
         mock_resp = self._make_response(403, "<html>Just a moment, please...</html>")
         mock_resp.content = mock_resp.text.encode()
         mock_resp.headers = {"content-type": "text/html"}
         client.client.request = AsyncMock(return_value=mock_resp)
         result = await client.get("https://protected.com")
-        assert result["error"] == "cloudflare_challenge"
+        assert result["error"] == "waf_blocked"
+        assert result["waf"] == "cloudflare"
 
 
 class TestAsyncContextManager:

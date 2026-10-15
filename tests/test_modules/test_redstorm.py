@@ -1,4 +1,5 @@
 """Tests for modules.redstorm – RedStormScanner."""
+
 import pytest
 
 from suika_hub.modules.redstorm import RedStormScanner
@@ -50,12 +51,14 @@ class TestFindSensitiveFields:
 class TestStageLeaderboard:
     @pytest.mark.asyncio
     async def test_leaderboard_with_usernames(self, scanner):
-        resp = make_response(body={
-            "leaderboard": [
-                {"username": "alice", "id": 1},
-                {"username": "bob", "id": 2},
-            ]
-        })
+        resp = make_response(
+            body={
+                "leaderboard": [
+                    {"username": "alice", "id": 1},
+                    {"username": "bob", "id": 2},
+                ]
+            }
+        )
         client = MockAsyncClient(responses={"leaderboard": resp})
         usernames = await scanner._stage_leaderboard("https://example.com", client)
         assert "alice" in usernames
@@ -63,11 +66,13 @@ class TestStageLeaderboard:
 
     @pytest.mark.asyncio
     async def test_leaderboard_with_sensitive_data(self, scanner):
-        resp = make_response(body={
-            "leaderboard": [
-                {"username": "alice", "email": "a@b.com", "is_admin": True},
-            ]
-        })
+        resp = make_response(
+            body={
+                "leaderboard": [
+                    {"username": "alice", "email": "a@b.com", "is_admin": True},
+                ]
+            }
+        )
         client = MockAsyncClient(responses={"leaderboard": resp})
         await scanner._stage_leaderboard("https://example.com", client)
         findings = [f for f in scanner.findings if "sensitive" in f.get("title", "").lower()]
@@ -96,12 +101,14 @@ class TestStageLeaderboard:
 
     @pytest.mark.asyncio
     async def test_leaderboard_data_key(self, scanner):
-        resp = make_response(body={
-            "data": [
-                {"user_id": "u1"},
-                {"_id": "u2"},
-            ]
-        })
+        resp = make_response(
+            body={
+                "data": [
+                    {"user_id": "u1"},
+                    {"_id": "u2"},
+                ]
+            }
+        )
         client = MockAsyncClient(responses={"leaderboard": resp})
         usernames = await scanner._stage_leaderboard("https://example.com", client)
         assert "u1" in usernames
@@ -112,9 +119,13 @@ class TestStageIDOR:
     @pytest.mark.asyncio
     async def test_idor_finding_on_200_with_data(self, scanner):
         responses = {}
-        for pattern in ["/api/researcher/submission/", "/api/researcher/profile/",
-                        "/api/researcher/user/", "/api/researcher/submissions/",
-                        "/api/researcher/report/"]:
+        for pattern in [
+            "/api/researcher/submission/",
+            "/api/researcher/profile/",
+            "/api/researcher/user/",
+            "/api/researcher/submissions/",
+            "/api/researcher/report/",
+        ]:
             responses[pattern] = make_response(body={"data": {"secret": "value"}})
 
         client = MockAsyncClient(responses=responses)
@@ -129,7 +140,9 @@ class TestStagePrograms:
         resp = make_response(body={"name": "Test Program"})
         client = MockAsyncClient(responses={"program/": resp})
         await scanner._stage_programs("https://example.com", client)
-        findings = [f for f in scanner.findings if "program" in f.get("title", "").lower() or "Program" in f.get("title", "")]
+        findings = [
+            f for f in scanner.findings if "program" in f.get("title", "").lower() or "Program" in f.get("title", "")
+        ]
         assert len(findings) > 0
 
     @pytest.mark.asyncio
@@ -137,7 +150,9 @@ class TestStagePrograms:
         resp = make_response(body={"name": "Internal", "is_private": True})
         client = MockAsyncClient(responses={"program/": resp})
         await scanner._stage_programs("https://example.com", client)
-        private_findings = [f for f in scanner.findings if "private" in f.get("title", "").lower() or "Private" in f.get("title", "")]
+        private_findings = [
+            f for f in scanner.findings if "private" in f.get("title", "").lower() or "Private" in f.get("title", "")
+        ]
         assert len(private_findings) > 0
 
 
@@ -152,7 +167,11 @@ class TestStageEndpoints:
                 responses[ep] = make_response(status=200, body={"data": "ok"})
         client = MockAsyncClient(responses=responses)
         await scanner._stage_endpoints("https://example.com", client)
-        priv_findings = [f for f in scanner.findings if "escalation" in f.get("title", "").lower() or "Privilege" in f.get("title", "")]
+        priv_findings = [
+            f
+            for f in scanner.findings
+            if "escalation" in f.get("title", "").lower() or "Privilege" in f.get("title", "")
+        ]
         assert len(priv_findings) > 0
 
     @pytest.mark.asyncio

@@ -1,4 +1,5 @@
 """Tests for core.config – ScanConfig, AuthConfig."""
+
 import json
 
 import yaml

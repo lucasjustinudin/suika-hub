@@ -1,4 +1,5 @@
 """Reconnaissance scanner - subdomain enum + endpoint discovery"""
+
 from urllib.parse import urlparse
 
 from rich.console import Console
@@ -16,14 +17,32 @@ class ReconScanner(BaseModule):
     description = "Subdomain enumeration, endpoint discovery, tech fingerprinting"
 
     COMMON_PATHS = [
-        "/api", "/api/v1", "/api/v2", "/api/v3",
-        "/graphql", "/graphiql",
-        "/swagger", "/swagger.json", "/swagger-ui",
-        "/docs", "/redoc", "/openapi.json",
-        "/admin", "/dashboard", "/login", "/register",
-        "/health", "/status", "/metrics", "/debug",
-        "/.env", "/.git/config", "/robots.txt", "/sitemap.xml",
-        "/wp-json", "/wp-admin",
+        "/api",
+        "/api/v1",
+        "/api/v2",
+        "/api/v3",
+        "/graphql",
+        "/graphiql",
+        "/swagger",
+        "/swagger.json",
+        "/swagger-ui",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/admin",
+        "/dashboard",
+        "/login",
+        "/register",
+        "/health",
+        "/status",
+        "/metrics",
+        "/debug",
+        "/.env",
+        "/.git/config",
+        "/robots.txt",
+        "/sitemap.xml",
+        "/wp-json",
+        "/wp-admin",
         "/.well-known/security.txt",
     ]
 
@@ -82,11 +101,13 @@ class ReconScanner(BaseModule):
         interesting = []
         for path, resp in zip(self.COMMON_PATHS, responses, strict=False):
             if resp["status"] in (200, 301, 302, 403):
-                interesting.append({
-                    "path": path,
-                    "status": resp["status"],
-                    "length": resp.get("length", 0),
-                })
+                interesting.append(
+                    {
+                        "path": path,
+                        "status": resp["status"],
+                        "length": resp.get("length", 0),
+                    }
+                )
 
                 # Flag sensitive files
                 if path in ("/.env", "/.git/config"):

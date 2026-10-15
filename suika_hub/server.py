@@ -43,16 +43,19 @@ async def capture(request):
         captured_requests.append(payload)
         # Extract domain
         from urllib.parse import urlparse
+
         parsed = urlparse(payload.get("url", ""))
         domain = parsed.netloc
         if domain and domain not in captured_sessions:
             captured_sessions[domain] = {"cookies": {}, "headers": {}, "endpoints": []}
         if domain:
-            captured_sessions[domain]["endpoints"].append({
-                "method": payload.get("method"),
-                "path": parsed.path,
-                "params": payload.get("params", {}),
-            })
+            captured_sessions[domain]["endpoints"].append(
+                {
+                    "method": payload.get("method"),
+                    "path": parsed.path,
+                    "params": payload.get("params", {}),
+                }
+            )
 
     return web.json_response({"ok": True})
 
@@ -83,11 +86,13 @@ async def receive_session(request):
     console.print("  [cyan]Ready to scan! Run:[/cyan]")
     console.print(f"  suika-hub scan -t https://{domain} -m redstorm --session {filename}\n")
 
-    return web.json_response({
-        "ok": True,
-        "message": f"Session saved: {filename}",
-        "cookies": len(session.get("cookies", {})),
-    })
+    return web.json_response(
+        {
+            "ok": True,
+            "message": f"Session saved: {filename}",
+            "cookies": len(session.get("cookies", {})),
+        }
+    )
 
 
 async def get_session(request):
@@ -102,12 +107,14 @@ async def list_sessions(request):
     """List all captured sessions"""
     sessions = []
     for domain, data in captured_sessions.items():
-        sessions.append({
-            "domain": domain,
-            "cookies": len(data.get("cookies", {})),
-            "headers": len(data.get("headers", {})),
-            "endpoints": len(data.get("endpoints", [])),
-        })
+        sessions.append(
+            {
+                "domain": domain,
+                "cookies": len(data.get("cookies", {})),
+                "headers": len(data.get("headers", {})),
+                "endpoints": len(data.get("endpoints", [])),
+            }
+        )
     return web.json_response({"sessions": sessions})
 
 
@@ -147,11 +154,13 @@ async def trigger_scan(request):
     # Run scan async
     results = await engine.run(config)
 
-    return web.json_response({
-        "ok": True,
-        "findings": len(results.get("findings", [])),
-        "results": results,
-    })
+    return web.json_response(
+        {
+            "ok": True,
+            "findings": len(results.get("findings", [])),
+            "results": results,
+        }
+    )
 
 
 def create_app():

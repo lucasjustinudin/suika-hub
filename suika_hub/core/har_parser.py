@@ -1,6 +1,10 @@
-"""HAR file parser - import browser sessions"""
+"""HAR file parser - import browser sessions."""
+
+from __future__ import annotations
+
 import json
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 
@@ -12,10 +16,11 @@ class HARParser:
         self.data = self._load()
         self.entries = self.data.get("log", {}).get("entries", [])
 
-    def _load(self) -> dict:
-        """Load HAR file"""
+    def _load(self) -> dict[str, Any]:
+        """Load HAR file."""
         content = self.path.read_text(encoding="utf-8")
-        return json.loads(content)
+        data: dict[str, Any] = json.loads(content)
+        return data
 
     def extract_cookies(self, domain: str | None = None) -> dict[str, str]:
         """Extract cookies from HAR entries"""
@@ -92,15 +97,17 @@ class HARParser:
             if post_data:
                 body = post_data.get("text")
 
-            endpoints.append({
-                "method": method,
-                "path": path,
-                "url": url,
-                "params": params,
-                "body": body,
-                "status": resp.get("status", 0),
-                "content_type": resp.get("content", {}).get("mimeType", ""),
-            })
+            endpoints.append(
+                {
+                    "method": method,
+                    "path": path,
+                    "url": url,
+                    "params": params,
+                    "body": body,
+                    "status": resp.get("status", 0),
+                    "content_type": resp.get("content", {}).get("mimeType", ""),
+                }
+            )
 
         return endpoints
 
@@ -119,7 +126,7 @@ class HARParser:
             # Detect API base
             for i, part in enumerate(parts):
                 if part in ("api", "v1", "v2", "v3"):
-                    api_paths.add("/".join(parts[:i+1]))
+                    api_paths.add("/".join(parts[: i + 1]))
 
             # Detect ID patterns in path
             for part in parts:

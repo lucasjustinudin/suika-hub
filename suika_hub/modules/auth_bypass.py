@@ -1,4 +1,5 @@
 """Authentication bypass scanner"""
+
 from rich.console import Console
 
 from suika_hub.core.http import AsyncClient
@@ -73,13 +74,16 @@ class AuthBypassScanner(BaseModule):
         # Create client without auth
         no_auth = AsyncClient(cookies={}, headers={}, concurrency=3, delay=client.delay)
 
-        endpoints = config.get("auth_endpoints", [
-            "/api/admin",
-            "/api/users",
-            "/api/settings",
-            "/api/config",
-            "/api/internal",
-        ])
+        endpoints = config.get(
+            "auth_endpoints",
+            [
+                "/api/admin",
+                "/api/users",
+                "/api/settings",
+                "/api/config",
+                "/api/internal",
+            ],
+        )
 
         async with no_auth:
             for ep in endpoints:
@@ -187,15 +191,15 @@ class AuthBypassScanner(BaseModule):
                     body = resp.get("body", {})
                     # Check if role actually changed
                     if isinstance(body, dict) and (body.get("role") == "admin" or body.get("is_admin") is True):
-                            self.add_finding(
-                                severity="CRITICAL",
-                                title=f"Privilege escalation: mass assignment at {ep}",
-                                description="User can escalate privileges via mass assignment",
-                                url=f"{target}{ep}",
-                                evidence=f"Payload: {payload}, Response indicates role change",
-                                impact="Full admin access, complete system compromise",
-                                remediation="Whitelist allowed fields in update operations",
-                            )
+                        self.add_finding(
+                            severity="CRITICAL",
+                            title=f"Privilege escalation: mass assignment at {ep}",
+                            description="User can escalate privileges via mass assignment",
+                            url=f"{target}{ep}",
+                            evidence=f"Payload: {payload}, Response indicates role change",
+                            impact="Full admin access, complete system compromise",
+                            remediation="Whitelist allowed fields in update operations",
+                        )
 
     def _has_data(self, resp: dict) -> bool:
         """Check if response has meaningful data"""

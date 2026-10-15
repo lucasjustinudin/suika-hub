@@ -1,4 +1,5 @@
 """Shared fixtures for suika-hub tests."""
+
 import json
 from typing import Any
 
@@ -10,6 +11,7 @@ from suika_hub.core.module import Finding
 # ---------------------------------------------------------------------------
 # Sample data factories
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_finding():
@@ -68,7 +70,7 @@ def sample_config():
         target="https://example.com",
         modules=["recon", "idor"],
         auth=AuthConfig(cookies={"session": "abc123"}, headers={}),
-        delay=0.0,   # no delay in tests
+        delay=0.0,  # no delay in tests
         concurrency=2,
         timeout=5,
         output_dir="/tmp/test_reports",
@@ -85,6 +87,7 @@ def sample_config_dict(sample_config):
 # ---------------------------------------------------------------------------
 # Mock HTTP response helpers
 # ---------------------------------------------------------------------------
+
 
 def make_response(
     url: str = "https://example.com/test",
@@ -140,6 +143,7 @@ def mock_cf_response():
 # Mock AsyncClient
 # ---------------------------------------------------------------------------
 
+
 class MockAsyncClient:
     """A mock of core.http.AsyncClient that returns configurable responses."""
 
@@ -194,6 +198,8 @@ def mock_client():
 @pytest.fixture
 def mock_client_factory():
     """Factory fixture – call with a dict of url_substring→response."""
+
     def _factory(responses=None, default=None):
         return MockAsyncClient(responses=responses, default=default)
+
     return _factory

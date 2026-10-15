@@ -1,4 +1,5 @@
 """Tests for core.reporter – JSON + Markdown report generation."""
+
 import json
 from unittest.mock import patch
 

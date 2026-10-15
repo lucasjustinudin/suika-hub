@@ -1,4 +1,5 @@
 """SSRF (Server-Side Request Forgery) Scanner"""
+
 from urllib.parse import quote
 
 from rich.console import Console
@@ -50,11 +51,33 @@ class SSRFScanner(BaseModule):
 
     # Parameters commonly vulnerable to SSRF
     SSRF_PARAMS = [
-        "url", "uri", "path", "src", "source", "href", "link",
-        "redirect", "redirect_url", "callback", "next", "target",
-        "dest", "destination", "domain", "host", "site",
-        "feed", "rss", "val", "validate", "proxy",
-        "image", "img", "load", "fetch", "file",
+        "url",
+        "uri",
+        "path",
+        "src",
+        "source",
+        "href",
+        "link",
+        "redirect",
+        "redirect_url",
+        "callback",
+        "next",
+        "target",
+        "dest",
+        "destination",
+        "domain",
+        "host",
+        "site",
+        "feed",
+        "rss",
+        "val",
+        "validate",
+        "proxy",
+        "image",
+        "img",
+        "load",
+        "fetch",
+        "file",
     ]
 
     async def execute(self, target: str, client: AsyncClient, config: dict) -> list[Finding]:
@@ -154,11 +177,17 @@ class SSRFScanner(BaseModule):
                 if resp["status"] == 200 and resp.get("body"):
                     body = str(resp["body"])
                     # Check for cloud metadata indicators
-                    if any(indicator in body for indicator in [
-                        "AccessKeyId", "SecretAccessKey",  # AWS
-                        "access_token", "token_type",  # GCP
-                        "subscriptionId", "resourceGroup",  # Azure
-                    ]):
+                    if any(
+                        indicator in body
+                        for indicator in [
+                            "AccessKeyId",
+                            "SecretAccessKey",  # AWS
+                            "access_token",
+                            "token_type",  # GCP
+                            "subscriptionId",
+                            "resourceGroup",  # Azure
+                        ]
+                    ):
                         self.add_finding(
                             severity="CRITICAL",
                             title=f"Cloud metadata exposed via SSRF ({cloud})",
@@ -178,11 +207,15 @@ class SSRFScanner(BaseModule):
 
         # Indicators of successful internal access
         indicators = [
-            "root:", "/bin/bash",  # /etc/passwd
-            "AccessKeyId", "SecretAccessKey",  # AWS
+            "root:",
+            "/bin/bash",  # /etc/passwd
+            "AccessKeyId",
+            "SecretAccessKey",  # AWS
             "computeMetadata",  # GCP
-            "Server: Apache", "Server: nginx",  # Internal servers
-            "redis_version", "+OK",  # Redis
+            "Server: Apache",
+            "Server: nginx",  # Internal servers
+            "redis_version",
+            "+OK",  # Redis
             "MongoDB",  # MongoDB
         ]
 

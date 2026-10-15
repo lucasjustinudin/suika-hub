@@ -1,4 +1,5 @@
 """Report generation - JSON, Markdown, HTML"""
+
 import json
 from datetime import datetime
 from pathlib import Path
@@ -25,6 +26,7 @@ class Reporter:
         md_path.write_text(self._to_markdown(results))
 
         from rich.console import Console
+
         console = Console()
         console.print("\n[green]Reports saved:[/green]")
         console.print(f"  JSON: {json_path}")

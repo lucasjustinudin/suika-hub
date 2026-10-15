@@ -1,4 +1,5 @@
 """Base module class - async"""
+
 from abc import ABC, abstractmethod
 
 from suika_hub.core.http import AsyncClient
@@ -6,12 +7,9 @@ from suika_hub.core.http import AsyncClient
 
 class Finding(dict):
     """Structured finding"""
+
     def __init__(self, severity: str, title: str, **kwargs):
-        super().__init__(
-            severity=severity,
-            title=title,
-            **kwargs
-        )
+        super().__init__(severity=severity, title=title, **kwargs)
 
 
 class BaseModule(ABC):

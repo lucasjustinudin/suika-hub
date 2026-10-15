@@ -1,4 +1,5 @@
 """Tests for modules.auth_bypass – AuthBypassScanner."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -117,8 +118,10 @@ class TestPathBypass:
     async def test_path_bypass_found(self, scanner):
         """Test path bypass by directly setting up responses that differentiate
         /admin (403) from bypass variants (200)."""
+
         class BypassClient(MockAsyncClient):
             """Client that returns 403 for exact /admin, 200 for bypass variants."""
+
             async def get(self, url, **kwargs):
                 self.request_count += 1
                 self.calls.append(("get", url, kwargs))

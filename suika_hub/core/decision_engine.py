@@ -1,12 +1,18 @@
-"""Intelligent Decision Engine - inspired by HexStrike
-Scores targets and recommends optimal attack strategy"""
+"""Intelligent Decision Engine - inspired by HexStrike.
+
+Scores targets and recommends an optimal attack strategy.
+"""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class TargetProfile:
     """Profile of a target based on recon"""
+
     domain: str
     stack: list[str] = field(default_factory=list)  # nodejs, python, php, etc
     frameworks: list[str] = field(default_factory=list)  # express, django, laravel
@@ -55,16 +61,16 @@ MODULE_TIME_ESTIMATE = {
 class DecisionEngine:
     """Recommend optimal scan strategy based on target profile"""
 
-    def recommend_modules(self, profile: TargetProfile, time_budget: int = 300) -> list[dict]:
+    def recommend_modules(self, profile: TargetProfile, time_budget: int = 300) -> list[dict[str, Any]]:
         """Recommend modules ordered by expected value"""
         # Get priority vulns for this stack
         stack = profile.stack[0] if profile.stack else "default"
         priority_vulns = VULN_PRIORITY.get(stack, VULN_PRIORITY["default"])
 
         # Score each module
-        scored_modules = []
+        scored_modules: list[dict[str, Any]] = []
         for module_name, effectiveness in MODULE_EFFECTIVENESS.items():
-            score = 0
+            score: float = 0.0
             for vuln_type in priority_vulns[:5]:
                 weight = 1.0 - (priority_vulns.index(vuln_type) * 0.15)
                 score += effectiveness.get(vuln_type, 0) * weight
@@ -77,25 +83,28 @@ class DecisionEngine:
             if module_name == "api_fuzzer" and profile.database == "mongodb":
                 score *= 1.3  # NoSQL injection more likely
 
-            time_est = MODULE_TIME_ESTIMATE.get(module_name, 60)
+            time_est: int = MODULE_TIME_ESTIMATE.get(module_name, 60)
 
-            scored_modules.append({
-                "module": module_name,
-                "score": round(score, 3),
-                "time_estimate": time_est,
-                "reason": self._get_reason(module_name, profile, priority_vulns),
-            })
+            scored_modules.append(
+                {
+                    "module": module_name,
+                    "score": round(score, 3),
+                    "time_estimate": time_est,
+                    "reason": self._get_reason(module_name, profile, priority_vulns),
+                }
+            )
 
         # Sort by score descending
-        scored_modules.sort(key=lambda x: x["score"], reverse=True)
+        scored_modules.sort(key=lambda x: float(str(x["score"])), reverse=True)
 
         # Filter by time budget
-        selected = []
+        selected: list[dict[str, Any]] = []
         remaining_time = time_budget
         for mod in scored_modules:
-            if remaining_time >= mod["time_estimate"]:
+            cost = int(str(mod["time_estimate"]))
+            if remaining_time >= cost:
                 selected.append(mod)
-                remaining_time -= mod["time_estimate"]
+                remaining_time -= cost
 
         return selected
 
@@ -130,7 +139,7 @@ class DecisionEngine:
     def _get_reason(self, module: str, profile: TargetProfile, priority_vulns: list[str]) -> str:
         """Generate human-readable reason for recommendation"""
         reasons = {
-            "idor_scanner": f"IDOR is #{priority_vulns.index('idor')+1 if 'idor' in priority_vulns else '?'} priority for {profile.stack}",
+            "idor_scanner": f"IDOR is #{priority_vulns.index('idor') + 1 if 'idor' in priority_vulns else '?'} priority for {profile.stack}",
             "api_fuzzer": f"{'NoSQL' if profile.database == 'mongodb' else 'SQL'} injection testing for {profile.database or 'unknown DB'}",
             "auth_bypass": "Test authentication boundaries and privilege escalation",
             "ssrf_scanner": f"SSRF testing for {profile.api_style} API",
@@ -145,7 +154,7 @@ class DecisionEngine:
         if not findings:
             return {"next_steps": ["Verify cookies are valid", "Try browser mode for Cloudflare bypass"]}
 
-        severity_count = {}
+        severity_count: dict[str, int] = {}
         for f in findings:
             sev = f.get("severity", "INFO")
             severity_count[sev] = severity_count.get(sev, 0) + 1

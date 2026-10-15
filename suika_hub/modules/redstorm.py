@@ -1,4 +1,9 @@
-"""RedStorm platform scanner - specialized for rswebapppltf"""
+"""RedStorm platform scanner - specialized for rswebapppltf."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from rich.console import Console
 
 from suika_hub.core.http import AsyncClient
@@ -35,10 +40,25 @@ class RedStormScanner(BaseModule):
     ]
 
     PROGRAM_SLUGS = [
-        "admin", "test", "staging", "internal", "dev", "private",
-        "demo", "honestbankweb", "honestbankapp", "xlprioritas",
-        "rswebapppltf", "production", "beta", "alpha", "sandbox",
-        "qa", "uat", "pentest", "security",
+        "admin",
+        "test",
+        "staging",
+        "internal",
+        "dev",
+        "private",
+        "demo",
+        "honestbankweb",
+        "honestbankapp",
+        "xlprioritas",
+        "rswebapppltf",
+        "production",
+        "beta",
+        "alpha",
+        "sandbox",
+        "qa",
+        "uat",
+        "pentest",
+        "security",
     ]
 
     async def execute(self, target: str, client: AsyncClient, config: dict) -> list[Finding]:
@@ -72,8 +92,9 @@ class RedStormScanner(BaseModule):
 
         resp = await client.get(f"{base}/api/researcher/leaderboard")
 
-        if resp["error"] == "cloudflare_challenge":
-            console.print("  [yellow]Cloudflare detected - need browser mode or valid cookies[/yellow]")
+        if resp.get("error") in ("waf_blocked", "cloudflare_challenge"):
+            waf = resp.get("waf", "cloudflare")
+            console.print(f"  [yellow]{waf} detected - need browser mode or valid cookies[/yellow]")
             return []
 
         if resp["status"] != 200:
@@ -96,10 +117,12 @@ class RedStormScanner(BaseModule):
                         usernames.append(str(uid))
 
                         # Check for sensitive data in leaderboard
-                        sensitive = [k for k in entry if k in (
-                            "email", "phone", "is_admin", "role", "token",
-                            "password_hash", "api_key", "address"
-                        )]
+                        sensitive = [
+                            k
+                            for k in entry
+                            if k
+                            in ("email", "phone", "is_admin", "role", "token", "password_hash", "api_key", "address")
+                        ]
                         if sensitive:
                             self.add_finding(
                                 severity="HIGH",
@@ -284,12 +307,22 @@ class RedStormScanner(BaseModule):
                             remediation="Require authentication for all API endpoints",
                         )
 
-    def _find_sensitive_fields(self, data: dict, path: str = "") -> list[str]:
-        """Recursively find sensitive fields in response"""
+    def _find_sensitive_fields(self, data: Any, path: str = "") -> list[str]:
+        """Recursively find sensitive fields in a response payload."""
         sensitive_keys = {
-            "email", "phone", "address", "password", "password_hash",
-            "token", "secret", "api_key", "ssn", "credit_card",
-            "private_key", "session", "credential",
+            "email",
+            "phone",
+            "address",
+            "password",
+            "password_hash",
+            "token",
+            "secret",
+            "api_key",
+            "ssn",
+            "credit_card",
+            "private_key",
+            "session",
+            "credential",
         }
         found = []
 

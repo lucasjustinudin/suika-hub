@@ -1,4 +1,5 @@
 """Async scan engine - orchestrates modules"""
+
 import time
 
 from rich.console import Console
@@ -30,8 +31,8 @@ class SuikaEngine:
         self.aliases[short] = instance.name
         self.aliases[instance.name] = instance.name
 
-    def resolve(self, name: str) -> BaseModule:
-        """Resolve module by name or alias"""
+    def resolve(self, name: str) -> BaseModule | None:
+        """Resolve module by name or alias."""
         real_name = self.aliases.get(name)
         if real_name:
             return self.modules.get(real_name)
@@ -41,23 +42,27 @@ class SuikaEngine:
         """Run scan with given config"""
         start_time = time.time()
 
-        console.print(Panel.fit(
-            f"[bold red]SUIKA HUNTER v2.0[/bold red]\n"
-            f"Target: [cyan]{config.target}[/cyan]\n"
-            f"Modules: [green]{', '.join(config.modules)}[/green]\n"
-            f"Concurrency: {config.concurrency} | Delay: {config.delay}s",
-            title="Scan Started",
-            border_style="red",
-        ))
+        console.print(
+            Panel.fit(
+                f"[bold red]SUIKA HUNTER v2.0[/bold red]\n"
+                f"Target: [cyan]{config.target}[/cyan]\n"
+                f"Modules: [green]{', '.join(config.modules)}[/green]\n"
+                f"Concurrency: {config.concurrency} | Delay: {config.delay}s",
+                title="Scan Started",
+                border_style="red",
+            )
+        )
 
         # Build HTTP client
         async with AsyncClient(
             cookies=config.auth.cookies,
             headers=config.auth.headers,
             proxy=config.proxy,
+            proxies=config.proxies,
             timeout=config.timeout,
             concurrency=config.concurrency,
             delay=config.delay,
+            rate_limit=config.rate_limit,
         ) as client:
             all_findings: list[Finding] = []
             modules_run = []
@@ -80,7 +85,7 @@ class SuikaEngine:
                     module.reset()
 
                     try:
-                        findings = await module.execute(config.target, client, config.model_dump())
+                        findings = await module.execute(config.target, client, config.module_config())
                         all_findings.extend(findings)
                         modules_run.append(module.name)
                         progress.update(task, completed=True)
@@ -98,6 +103,7 @@ class SuikaEngine:
                 "duration_seconds": round(elapsed, 2),
                 "total_findings": len(all_findings),
                 "by_severity": self._count_severity(all_findings),
+                "http": client.stats(),
             },
         }
 
@@ -111,7 +117,7 @@ class SuikaEngine:
         return result
 
     def _count_severity(self, findings: list[Finding]) -> dict[str, int]:
-        counts = {}
+        counts: dict[str, int] = {}
         for f in findings:
             sev = f.get("severity", "INFO")
             counts[sev] = counts.get(sev, 0) + 1

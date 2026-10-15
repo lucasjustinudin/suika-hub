@@ -10,13 +10,15 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   lint:
-    name: Lint (Ruff)
+    name: Lint & Format (Ruff)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,10 +28,10 @@ jobs:
       - name: Install dependencies
         run: pip install ruff
 
-      - name: Run Ruff check
+      - name: Ruff check
         run: ruff check suika_hub/ tests/
 
-      - name: Run Ruff format check
+      - name: Ruff format check
         run: ruff format --check suika_hub/ tests/
 
   typecheck:
@@ -55,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -91,3 +93,25 @@ jobs:
       - name: Verify all imports
         run: python scripts/verify_imports.py
 
+  build:
+    name: Build Distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Install from wheel and verify
+        run: |
+          pip install dist/*.whl
+          suika-hub --help
+          python -c "import suika_hub; print(suika_hub.__version__)"

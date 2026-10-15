@@ -4,6 +4,7 @@ The project doesn't have a separate formatters module; formatting logic
 lives in core.reporter._to_markdown.  This test file covers edge cases
 in that formatting path.
 """
+
 from suika_hub.core.reporter import Reporter
 
 

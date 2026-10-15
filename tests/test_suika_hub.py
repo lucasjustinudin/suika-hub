@@ -6,37 +6,45 @@ class TestImports:
 
     def test_package_import(self):
         import suika_hub
+
         assert hasattr(suika_hub, "__version__")
-        assert suika_hub.__version__ == "2.0.0"
+        assert suika_hub.__version__ == "2.1.0"
 
     def test_core_config(self):
         from suika_hub.core.config import AuthConfig, ScanConfig
+
         assert ScanConfig is not None
         assert AuthConfig is not None
 
     def test_core_engine(self):
         from suika_hub.core.engine import SuikaEngine
+
         assert SuikaEngine is not None
 
     def test_core_http(self):
         from suika_hub.core.http import AsyncClient
+
         assert AsyncClient is not None
 
     def test_core_module(self):
         from suika_hub.core.module import BaseModule, Finding
+
         assert BaseModule is not None
         assert Finding is not None
 
     def test_core_reporter(self):
         from suika_hub.core.reporter import Reporter
+
         assert Reporter is not None
 
     def test_core_har_parser(self):
         from suika_hub.core.har_parser import HARParser
+
         assert HARParser is not None
 
     def test_core_decision_engine(self):
         from suika_hub.core.decision_engine import DecisionEngine
+
         assert DecisionEngine is not None
 
     def test_modules_package(self):
@@ -49,6 +57,7 @@ class TestImports:
             RedStormScanner,
             SSRFScanner,
         )
+
         assert RedStormScanner is not None
         assert IDORScanner is not None
         assert ReconScanner is not None
@@ -63,6 +72,7 @@ class TestConfig:
 
     def test_scan_config_defaults(self):
         from suika_hub.core.config import ScanConfig
+
         config = ScanConfig(target="https://example.com")
         assert config.target == "https://example.com"
         assert config.modules == []
@@ -74,6 +84,7 @@ class TestConfig:
 
     def test_scan_config_custom(self):
         from suika_hub.core.config import AuthConfig, ScanConfig
+
         config = ScanConfig(
             target="https://example.com",
             modules=["recon", "idor"],
@@ -89,6 +100,7 @@ class TestConfig:
 
     def test_auth_config_defaults(self):
         from suika_hub.core.config import AuthConfig
+
         auth = AuthConfig()
         assert auth.cookies == {}
         assert auth.headers == {}
@@ -100,6 +112,7 @@ class TestFinding:
 
     def test_finding_creation(self):
         from suika_hub.core.module import Finding
+
         finding = Finding(
             severity="HIGH",
             title="Test Finding",
@@ -112,6 +125,7 @@ class TestFinding:
 
     def test_finding_is_dict(self):
         from suika_hub.core.module import Finding
+
         finding = Finding(severity="INFO", title="Test")
         assert isinstance(finding, dict)
         assert "severity" in finding
@@ -187,6 +201,7 @@ class TestDecisionEngine:
 
     def test_redstorm_recommendations(self):
         from suika_hub.core.decision_engine import DecisionEngine
+
         engine = DecisionEngine()
         recs = engine.recommend_for_redstorm()
         assert len(recs) > 0
@@ -196,6 +211,7 @@ class TestDecisionEngine:
 
     def test_custom_target_recommendations(self):
         from suika_hub.core.decision_engine import DecisionEngine, TargetProfile
+
         engine = DecisionEngine()
         profile = TargetProfile(domain="example.com", stack=["python"])
         recs = engine.recommend_modules(profile, time_budget=300)
@@ -207,6 +223,7 @@ class TestReporter:
 
     def test_reporter_creation(self, tmp_path):
         from suika_hub.core.reporter import Reporter
+
         reporter = Reporter(output_dir=str(tmp_path / "reports"))
         assert reporter.output_dir.exists()
 
@@ -216,5 +233,6 @@ class TestCLI:
 
     def test_cli_module_has_app(self):
         from suika_hub.cli import app, main
+
         assert app is not None
         assert callable(main)

@@ -3,6 +3,7 @@
 The project uses a decision engine rather than a traditional plugin registry;
 this file tests the scoring, recommendation, and analysis logic.
 """
+
 from suika_hub.core.decision_engine import (
     MODULE_EFFECTIVENESS,
     MODULE_TIME_ESTIMATE,

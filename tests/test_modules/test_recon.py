@@ -1,4 +1,5 @@
 """Tests for modules.recon – ReconScanner."""
+
 import pytest
 
 from suika_hub.modules.recon import ReconScanner
@@ -37,10 +38,12 @@ class TestExtractDomain:
 class TestSubdomainEnum:
     @pytest.mark.asyncio
     async def test_subdomains_found(self, scanner):
-        resp = make_response(body=[
-            {"name_value": "api.example.com"},
-            {"name_value": "www.example.com\ndev.example.com"},
-        ])
+        resp = make_response(
+            body=[
+                {"name_value": "api.example.com"},
+                {"name_value": "www.example.com\ndev.example.com"},
+            ]
+        )
         client = MockAsyncClient(responses={"crt.sh": resp})
         subs = await scanner._enumerate_subdomains("example.com", client)
         assert "api.example.com" in subs
@@ -54,10 +57,12 @@ class TestSubdomainEnum:
 
     @pytest.mark.asyncio
     async def test_wildcard_filtered(self, scanner):
-        resp = make_response(body=[
-            {"name_value": "*.example.com"},
-            {"name_value": "api.example.com"},
-        ])
+        resp = make_response(
+            body=[
+                {"name_value": "*.example.com"},
+                {"name_value": "api.example.com"},
+            ]
+        )
         client = MockAsyncClient(responses={"crt.sh": resp})
         subs = await scanner._enumerate_subdomains("example.com", client)
         assert "*.example.com" not in subs
@@ -65,10 +70,12 @@ class TestSubdomainEnum:
 
     @pytest.mark.asyncio
     async def test_subdomains_finding_added(self, scanner):
-        resp = make_response(body=[
-            {"name_value": "api.example.com"},
-            {"name_value": "www.example.com"},
-        ])
+        resp = make_response(
+            body=[
+                {"name_value": "api.example.com"},
+                {"name_value": "www.example.com"},
+            ]
+        )
         client = MockAsyncClient(responses={"crt.sh": resp})
         await scanner._enumerate_subdomains("example.com", client)
         info_findings = [f for f in scanner.findings if "subdomain" in f.get("title", "").lower()]
@@ -148,9 +155,9 @@ class TestFingerprint:
 class TestReconExecute:
     @pytest.mark.asyncio
     async def test_execute_full(self, scanner):
-        client = MockAsyncClient(default=make_response(
-            status=200, body="<html></html>", headers={"content-type": "text/html"}
-        ))
+        client = MockAsyncClient(
+            default=make_response(status=200, body="<html></html>", headers={"content-type": "text/html"})
+        )
         findings = await scanner.execute("https://example.com", client, {})
         assert isinstance(findings, list)
 

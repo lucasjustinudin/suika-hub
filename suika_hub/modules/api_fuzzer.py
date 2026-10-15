@@ -1,4 +1,5 @@
 """API Fuzzer - smart fuzzing with mutation and injection testing"""
+
 from rich.console import Console
 
 from suika_hub.core.http import AsyncClient
@@ -40,16 +41,16 @@ class APIFuzzer(BaseModule):
     ]
 
     BOUNDARY = [
-        "",           # empty
-        " ",          # space
-        "null",       # null string
+        "",  # empty
+        " ",  # space
+        "null",  # null string
         "undefined",  # undefined
-        "-1",         # negative
-        "0",          # zero
-        "99999999",   # large number
+        "-1",  # negative
+        "0",  # zero
+        "99999999",  # large number
         "a" * 10000,  # buffer overflow
         "../../../etc/passwd",  # path traversal
-        "%00",        # null byte
+        "%00",  # null byte
     ]
 
     async def execute(self, target: str, client: AsyncClient, config: dict) -> list[Finding]:

@@ -1,4 +1,5 @@
 """Tests for modules.ssrf_scanner – SSRFScanner."""
+
 import pytest
 
 from suika_hub.modules.ssrf_scanner import SSRFScanner

@@ -1,4 +1,5 @@
 """Tests for modules.idor – IDORScanner."""
+
 import pytest
 
 from suika_hub.modules.idor import IDORScanner

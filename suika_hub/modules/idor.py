@@ -1,4 +1,5 @@
 """Generic IDOR vulnerability scanner"""
+
 from rich.console import Console
 
 from suika_hub.core.http import AsyncClient
@@ -29,8 +30,16 @@ class IDORScanner(BaseModule):
     ]
 
     DEFAULT_IDS = [
-        "1", "2", "3", "100", "999", "9999",
-        "admin", "test", "root", "system",
+        "1",
+        "2",
+        "3",
+        "100",
+        "999",
+        "9999",
+        "admin",
+        "test",
+        "root",
+        "system",
         "00000000-0000-0000-0000-000000000001",
         "000000000000000000000001",
     ]
@@ -92,7 +101,7 @@ class IDORScanner(BaseModule):
         # Compare user IDs
         my_id = baseline.get("id") or baseline.get("_id") or baseline.get("user_id")
         their_id = body.get("id") or body.get("_id") or body.get("user_id")
-        return my_id and my_id == their_id
+        return bool(my_id) and my_id == their_id
 
     def _has_meaningful_data(self, body) -> bool:
         """Check if response has actual data (not empty/error)"""
@@ -109,9 +118,18 @@ class IDORScanner(BaseModule):
     def _detect_sensitive(self, body) -> list[str]:
         """Detect sensitive fields in response"""
         sensitive_keys = {
-            "email", "phone", "address", "password", "ssn",
-            "credit_card", "token", "secret", "api_key",
-            "submission", "report", "bounty_amount",
+            "email",
+            "phone",
+            "address",
+            "password",
+            "ssn",
+            "credit_card",
+            "token",
+            "secret",
+            "api_key",
+            "submission",
+            "report",
+            "bounty_amount",
         }
         found = []
 

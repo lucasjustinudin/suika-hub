@@ -1,4 +1,5 @@
 """Tests for modules.upload_scanner – FileUploadScanner."""
+
 import pytest
 
 from suika_hub.modules.upload_scanner import FileUploadScanner
@@ -63,10 +64,12 @@ class TestFindUploadEndpoints:
     async def test_multiple_endpoints(self, scanner):
         resp_ok = make_response(status=422)
         resp_not = make_response(status=404)
-        client = MockAsyncClient(responses={
-            "/api/upload": resp_ok,
-            "/api/avatar": resp_not,
-        })
+        client = MockAsyncClient(
+            responses={
+                "/api/upload": resp_ok,
+                "/api/avatar": resp_not,
+            }
+        )
         valid = await scanner._find_upload_endpoints("https://example.com", client, ["/api/upload", "/api/avatar"])
         assert "/api/upload" in valid
         assert "/api/avatar" not in valid

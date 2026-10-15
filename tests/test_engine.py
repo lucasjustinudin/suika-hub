@@ -1,4 +1,5 @@
 """Tests for core.engine – SuikaEngine."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -9,6 +10,7 @@ from suika_hub.core.module import BaseModule, Finding
 # ---------------------------------------------------------------------------
 # Stub modules
 # ---------------------------------------------------------------------------
+
 
 class StubModuleA(BaseModule):
     name = "stub_a_scanner"
@@ -40,6 +42,7 @@ class ErrorModule(BaseModule):
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestSuikaEngineRegistration:
     def test_register_module(self):
