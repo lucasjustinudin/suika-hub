@@ -10,7 +10,10 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import tomllib
+try:  # Python 3.11+
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10
+    import tomli as tomllib  # type: ignore[no-redef]
 
 import suika_hub
 from suika_hub import _version
