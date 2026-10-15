@@ -228,3 +228,52 @@ class TestScannerDetection:
             for field in ("severity", "title", "description", "evidence", "impact", "remediation"):
                 assert f.get(field), f"missing {field}"
             assert f["severity"] in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"}
+
+
+class TestAuthSchemeIsAppliedToEveryProbe:
+    """Regression: forged tokens must carry the same auth scheme as the control.
+
+    A forged token sent without ``Bearer`` is rejected for the wrong reason, so a
+    server that genuinely accepts unsigned tokens reads as "signature verified"
+    and the bypass is silently missed.
+    """
+
+    class Recorder:
+        """Client that records the exact header value sent on each probe."""
+
+        def __init__(self, header: str = "Authorization", status: int = 200):
+            self.header = header
+            self.status = status
+            self.seen: list[str] = []
+
+        async def get(self, url, **kwargs):
+            self.seen.append((kwargs.get("headers") or {}).get(self.header, ""))
+            return {"url": url, "status": self.status, "body": {"id": 1}, "headers": {}, "error": None}
+
+    async def _run(self, recorder) -> list[str]:
+        await JWTScanner().execute(
+            "https://example.com",
+            recorder,
+            {"jwt": SAMPLE, "jwt_header": recorder.header, "jwt_endpoint": "https://example.com/api/user/me"},
+        )
+        return recorder.seen
+
+    @pytest.mark.asyncio
+    async def test_control_and_forgeries_all_carry_bearer(self):
+        seen = await self._run(self.Recorder())
+        assert seen, "no probes were sent"
+        assert all(v.startswith("Bearer ") for v in seen), f"probe missing auth scheme: {seen}"
+
+    @pytest.mark.asyncio
+    async def test_forged_tokens_are_not_sent_bare(self):
+        """The mutation probes specifically must keep the prefix, not just the control."""
+        seen = await self._run(self.Recorder())
+        for value in seen[1:]:
+            assert value.startswith("Bearer ") and len(value) > len("Bearer ")
+
+    @pytest.mark.asyncio
+    async def test_custom_header_gets_no_prefix(self):
+        """A non-Authorization header must not be given a Bearer prefix."""
+        seen = await self._run(self.Recorder(header="X-Token"))
+        assert seen
+        assert all(not v.startswith("Bearer ") and v.count(".") == 2 for v in seen)

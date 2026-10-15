@@ -147,6 +147,10 @@ class JWTScanner(BaseModule):
     name = "jwt_scanner"
     description = "JWT algorithm confusion, none-alg acceptance, weak secrets, claim tampering"
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._prefix = ""
+
     async def execute(self, target: str, client: AsyncClient, config: dict) -> list[Finding]:
         """Run JWT checks against a token supplied in config or auth headers."""
         console.print("[bold cyan]JWT Scanner[/bold cyan] - Testing token handling")
@@ -162,9 +166,9 @@ class JWTScanner(BaseModule):
 
         endpoint = config.get("jwt_endpoint") or f"{target.rstrip('/')}/api/user/me"
         header_name = config.get("jwt_header") or "Authorization"
-        prefix = "" if header_name.lower() != "authorization" else "Bearer "
+        self._prefix = "" if header_name.lower() != "authorization" else "Bearer "
 
-        control = await self._probe(client, endpoint, header_name, f"{prefix}{token}")
+        control = await self._probe(client, endpoint, header_name, token)
         control_ok = self._is_authorized(control)
         if not control_ok:
             console.print(
@@ -198,10 +202,15 @@ class JWTScanner(BaseModule):
         client: AsyncClient,
         endpoint: str,
         header_name: str,
-        header_value: str,
+        token: str,
     ) -> dict[str, Any]:
-        """Send one authenticated request."""
-        return await client.get(endpoint, headers={header_name: header_value})
+        """Send one authenticated request with the bare token.
+
+        The auth scheme prefix is applied here rather than by each caller: a
+        forged token sent without ``Bearer`` is rejected for the wrong reason,
+        which reads as "signature verified" and hides a real bypass.
+        """
+        return await client.get(endpoint, headers={header_name: f"{self._prefix}{token}"})
 
     def _is_authorized(self, resp: dict[str, Any]) -> bool:
         """Treat 2xx as authorized and everything else as rejected."""
