@@ -1,3 +1,5 @@
-"""Suika Hunter v2 Core"""
+"""Core primitives for suika-hub."""
 
-__version__ = "2.0.0"
+from suika_hub._version import __version__
+
+__all__ = ["__version__"]

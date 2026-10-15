@@ -1,92 +1,84 @@
-"""
-Suika Plugin Template
-=====================
-Copy this directory to create your own plugin.
+"""Suika Hub plugin template.
 
-Structure:
-  my_plugin/
-  ├── __init__.py        ← must export get_module() -> Type[BaseModule]
-  ├── scanner.py         ← your scanner logic (this file)
-  ├── plugin.json        ← optional manifest
-  └── requirements.txt   ← optional extra deps
+Copy this file (or the whole directory) and replace the scanner with your own
+logic. Two ways to load it:
 
-Quick start:
-  1. Copy this directory to your project
-  2. Rename and implement your scanner in scanner.py
-  3. Test:  python -c "from my_plugin.scanner import MyScanner; print(MyScanner)"
-  4. Install:  suika install /path/to/my_plugin/
+  1. Ad-hoc:    suika-hub scan -t https://target -m template --plugin ./my_plugin.py
+  2. Installed: declare an entry point in the ``suika.plugins`` group in your
+     package metadata, ``pip install .``, and it is discovered automatically.
+
+A plugin is any class that subclasses ``BaseModule`` and implements
+``async execute(target, client, config)``. The engine instantiates it and passes
+a shared HTTP client.
 
 Naming conventions:
-  - Module `name` attribute: lowercase, underscores  (e.g. "xss_pro")
-  - Class name: CamelCase + Scanner                   (e.g. "XSSProScanner")
+  - Module ``name`` attribute: lowercase with underscores (e.g. "xss_pro")
+  - Class name: CamelCase ending in Scanner (e.g. "XSSProScanner")
 """
 
-from typing import Dict, List
+from __future__ import annotations
 
-from core.module import BaseModule, Finding
-from core.http import AsyncClient
+from suika_hub.core.http import AsyncClient
+from suika_hub.core.module import BaseModule, Finding
 
 
 class TemplateScanner(BaseModule):
+    """Example scanner demonstrating the plugin interface.
+
+    Rename the class and set ``name`` to a unique identifier -- that value is
+    what users pass to ``--module``.
     """
-    Example vulnerability scanner plugin.
 
-    Replace this docstring with your module's description.
-    This text is shown in `suika list-plugins`.
-    """
+    name = "template"
+    description = "Template scanner - demonstrates the plugin interface"
 
-    name = "template"          # unique identifier, used in --module flag
-    description = "Template scanner – demonstrates the plugin interface"
-
-    async def execute(self, target: str, client: AsyncClient, config: Dict) -> List[Finding]:
-        """
-        Main entry point called by the Suika engine.
+    async def execute(self, target: str, client: AsyncClient, config: dict) -> list[Finding]:
+        """Run the scan.
 
         Args:
-            target:  Target URL or domain string
-            client:  Shared async HTTP client (from core.http)
-            config:  ScanConfig dict (.target, .auth, .delay, etc.)
+            target: Target URL or domain.
+            client: Shared async HTTP client. ``await client.get(url)`` returns a
+                dict with the keys ``url``, ``status``, ``body``, ``headers``,
+                ``error`` and ``length``. It does not raise for HTTP error
+                statuses, and network failures come back as ``status == 0`` with
+                an ``error`` string -- so check those keys instead of catching
+                exceptions. Read ``resp["status"]``, not ``resp.status``.
+            config: Scan options; module-specific keys arrive here.
 
         Returns:
-            List of Finding dicts
+            The findings this module produced.
         """
         self.reset()
-        findings: List[Finding] = []
 
-        # ── Example: probe a single endpoint ─────────────────────────────
-        url = f"{target.rstrip('/')}/example"
-        try:
-            resp = await client.get(url)
+        url = f"{target.rstrip('/')}/robots.txt"
+        response = await client.get(url)
 
-            # Check for a vulnerability condition
-            if resp.status == 200 and "secret" in resp.text.lower():
-                findings.append(self.add_finding(
-                    severity="HIGH",
-                    title="Example vulnerability found",
-                    url=url,
-                    description="The /example endpoint leaks sensitive data.",
-                    evidence=resp.text[:500],
-                    impact="Attackers can read sensitive information.",
-                    remediation="Remove sensitive data from /example response.",
-                ))
-        except Exception:
-            pass
+        if response.get("error") is not None or response.get("status") != 200:
+            # Nothing to report. Returning quietly beats emitting an
+            # "unknown" finding: a finding without evidence is noise.
+            return self.findings
 
-        # ── Example: add an informational finding ────────────────────────
-        findings.append(self.add_finding(
-            severity="INFO",
-            title="Template scan completed",
-            url=target,
-            description="This is a placeholder finding from the template plugin.",
-        ))
+        body = response.get("body")
+        text = body if isinstance(body, str) else ""
 
-        return findings
+        if "disallow" in text.lower():
+            self.add_finding(
+                severity="INFO",
+                title="robots.txt lists disallowed paths",
+                url=url,
+                description="robots.txt enumerates paths the site asks crawlers not to index.",
+                evidence=text[:500],
+                impact="May reveal administrative or staging paths worth reviewing.",
+                remediation="Confirm the listed paths do not expose sensitive functionality.",
+            )
+
+        return self.findings
 
 
-# ── Plugin entry point ───────────────────────────────────────────────────────
-# The plugin system calls get_module() to discover your scanner class.
-# This is also used as the entry-point in setup.py/pyproject.toml.
+def get_module() -> type[BaseModule]:
+    """Return the scanner class.
 
-def get_module() -> type:
-    """Return the scanner class. Required for pip-based plugins."""
+    Required for file-based plugins loaded via ``--plugin``, and used as the
+    entry-point target for installed plugins.
+    """
     return TemplateScanner

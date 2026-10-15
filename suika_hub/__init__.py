@@ -1,7 +1,8 @@
-"""Suika Hunter - Async, Modular, AI-Powered Bug Bounty Scanner"""
+"""Suika Hub - async, modular web security scanning toolkit."""
 
-__version__ = "2.1.0"
-__author__ = "Suika Hunter Team"
+from suika_hub._version import __version__
+
+__author__ = "Suika Hub contributors"
 
 from suika_hub.core.config import AuthConfig, ScanConfig
 from suika_hub.core.engine import SuikaEngine

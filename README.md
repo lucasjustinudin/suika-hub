@@ -19,7 +19,7 @@ Async, modular web security scanning toolkit for authorized security research.
 - **Proxy rotation** with round-robin/random strategies and automatic cooldown of proxies that keep failing
 - **WAF detection** across Cloudflare, Akamai, Imperva, DataDome, AWS WAF, Sucuri, F5, and Azure Front Door
 - **Coherent browser fingerprint** -- UA and `sec-ch-ua` client hints are derived together, so the header set is internally consistent
-- **Modular scanner registry** with aliases and a plugin template
+- **Modular scanner registry** with aliases, plus plugin discovery from local paths or installed entry points
 - **Differential findings** -- checks that mutate a request compare against a control request instead of pattern-matching a string
 - Report generation in JSON and Markdown, including HTTP/retry/proxy statistics
 - Optional OpenAI-compatible AI analyzer
@@ -74,6 +74,18 @@ shape, not a specific host):
 ```bash
 suika-hub recommend --target spa      # nodejs, python, php, java, spa
 ```
+
+Load a plugin from a file or directory:
+
+```bash
+suika-hub scan -t https://example.com -m my_plugin --plugin ./my_plugin.py
+suika-hub scan -t https://example.com -m my_plugin --plugin ./plugins/my_plugin/
+```
+
+Plugins are also discovered automatically when installed as a distribution
+declaring an entry point in the `suika.plugins` group. A malformed plugin is
+reported and skipped, never fatal. See `plugins/templates/` and
+[CONTRIBUTING.md](CONTRIBUTING.md#writing-plugins).
 
 Import a HAR file to reuse a browser session:
 

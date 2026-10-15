@@ -1,10 +1,15 @@
 {
-  "target": "https://www.redstorm.io",
-  "modules": ["redstorm"],
+  "target": "https://example.com",
+  "modules": [
+    "recon",
+    "idor",
+    "api"
+  ],
   "auth": {
     "cookies": {
       "session": "PASTE_YOUR_SESSION_COOKIE_HERE"
-    }
+    },
+    "headers": {}
   },
   "delay": 1.5,
   "concurrency": 3,

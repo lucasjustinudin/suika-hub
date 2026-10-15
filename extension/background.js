@@ -118,7 +118,7 @@ async function exportSession(domain) {
     });
     return await resp.json();
   } catch (e) {
-    return { error: "Server not running. Start: python suika.py server" };
+    return { error: "Server not running. Start: suika-hub server" };
   }
 }
 

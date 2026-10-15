@@ -11,6 +11,8 @@ from pathlib import Path
 from aiohttp import web
 from rich.console import Console
 
+from suika_hub._version import __version__
+
 console = Console()
 
 # Storage
@@ -23,7 +25,7 @@ captured_requests: list = []
 
 async def health(request):
     """Health check endpoint"""
-    return web.json_response({"status": "ok", "version": "2.0.0"})
+    return web.json_response({"status": "ok", "version": __version__})
 
 
 async def capture(request):

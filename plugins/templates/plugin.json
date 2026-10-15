@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "author": "Suika Team",
   "description": "Template for creating Suika Hunter plugins",
-  "suika_version": ">=2.0.0",
+  "suika_version": ">=2.1.0",
   "modules": ["template"],
   "entry_point": "scanner:TemplateScanner"
 }

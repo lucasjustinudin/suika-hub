@@ -98,4 +98,41 @@ if merged.get("jwt") != "a.b.c":
     sys.exit(1)
 
 print(f"\nConfig test: target={config.target}, modules={config.modules}, extra merged OK")
+
+# AuthConfig is part of the public surface too; verify it constructs and carries
+# its values rather than only importing.
+auth = AuthConfig(cookies={"session": "abc"}, headers={"X-Test": "1"})
+if auth.cookies.get("session") != "abc" or auth.headers.get("X-Test") != "1":
+    print("\nERROR: AuthConfig did not retain the values it was given")
+    sys.exit(1)
+print("  AuthConfig OK")
+
+# Plugin subsystem: the template must be loadable, and discovery must never
+# raise even when handed a path that does not exist.
+from suika_hub.core.plugins import ENTRY_POINT_GROUP, load_from_path  # noqa: E402
+
+print(f"\nPlugin entry-point group: {ENTRY_POINT_GROUP}")
+if ENTRY_POINT_GROUP != "suika.plugins":
+    print(f"\nERROR: unexpected entry-point group: {ENTRY_POINT_GROUP}")
+    sys.exit(1)
+
+from pathlib import Path  # noqa: E402
+
+template = Path(__file__).resolve().parent.parent / "plugins" / "templates" / "scanner.py"
+if not template.exists():
+    print(f"\nERROR: plugin template missing: {template}")
+    sys.exit(1)
+
+template_result = load_from_path(template)
+if not template_result.loaded or template_result.errors:
+    print(f"\nERROR: plugin template did not load cleanly: {template_result.errors}")
+    sys.exit(1)
+print(f"  template loads OK: {template_result.loaded[0].name}")
+
+missing = load_from_path(Path(__file__).resolve().parent / "__does_not_exist__")
+if missing.ok:
+    print("\nERROR: a missing plugin path should report an error")
+    sys.exit(1)
+print("  missing path reported without raising")
+
 print("\nAll checks passed!")

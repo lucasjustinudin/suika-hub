@@ -1,23 +1,20 @@
-"""
-Suika Plugin – Template
-=======================
-Copy this package to create your own Suika Hunter plugin.
+"""Suika Hub plugin package - template.
 
-Usage:
-  1. Rename this directory (e.g. my_xss_scanner/)
-  2. Edit scanner.py – implement your logic
-  3. Install:  suika install ./my_xss_scanner
-  4. Run:      suika scan -t https://target.com -m my_xss_scanner
-"""
+Copy this directory to create your own plugin:
 
-__version__ = "0.1.0"
-__author__ = "Your Name"
+  1. Rename the directory (e.g. ``my_xss_scanner/``)
+  2. Implement your scanner in ``scanner.py``
+  3. Load it ad-hoc:
+         suika-hub scan -t https://target -m <your_name> --plugin ./my_xss_scanner/
+     or install it so it is discovered automatically (see ``setup_example.py``).
+"""
 
 from plugins.templates.scanner import TemplateScanner
 
+__version__ = "0.1.0"
 __all__ = ["TemplateScanner"]
 
 
 def get_module() -> type:
-    """Entry point for pip-based plugin discovery."""
+    """Return the scanner class for directory-based discovery."""
     return TemplateScanner

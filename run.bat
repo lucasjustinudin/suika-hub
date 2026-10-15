@@ -1,4 +1,4 @@
 @echo off
-echo Suika Hunter v2.0
-echo.
-python suika.py %*
+REM Convenience wrapper. Requires the package to be installed:
+REM   pip install -e .
+python -m suika_hub.cli %*

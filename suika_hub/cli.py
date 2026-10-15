@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-suika-hub v2.0 - Modular Web Security Scanner
+suika-hub - modular web security scanning toolkit
 Async, modular, AI-powered vulnerability scanner
 """
 
@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from suika_hub._version import __version__
 from suika_hub.core.config import AuthConfig, ScanConfig
 from suika_hub.core.engine import SuikaEngine
 from suika_hub.modules import (
@@ -37,7 +38,7 @@ def banner():
             " \\__ \\ || | | / / _` |  | __ | || | ' \\  _/ -_) '_|\n"
             " |___/\\_,_|_|_\\_\\__,_|  |_||_|\\_,_|_||_\\__\\___|_|  \n"
             "[/bold red]\n"
-            "[dim]v2.0 - Async | Modular | AI-Powered | 9 Modules[/dim]",
+            f"[dim]v{__version__} - Async | Modular | Extensible[/dim]",
             border_style="red",
         )
     )
@@ -82,6 +83,11 @@ def scan(
     output: str = typer.Option("reports", "--output", "-o", help="Output directory"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
     browser: bool = typer.Option(False, "--browser", "-b", help="Use browser for Cloudflare bypass"),
+    plugin: list[str] = typer.Option(
+        [],
+        "--plugin",
+        help="Load plugin from a .py file or directory (repeatable)",
+    ),
 ):
     """Run vulnerability scan against target"""
     banner()
@@ -145,9 +151,26 @@ def scan(
         extra=extra,
     )
 
-    # Build engine and run
+    # Build engine, load any plugins, then run
     engine = build_engine()
+    _load_plugins(engine, plugin)
     asyncio.run(engine.run(config))
+
+
+def _load_plugins(engine: SuikaEngine, paths: list[str] | None = None) -> None:
+    """Discover and register plugins, reporting anything that failed to load.
+
+    Failures are printed rather than raised: a broken third-party plugin must
+    not prevent a scan from running with the built-in modules.
+    """
+    from suika_hub.core.plugins import load_and_register
+
+    result = load_and_register(engine, paths=list(paths or []))
+
+    for cls in result.loaded:
+        console.print(f"[green]Plugin loaded:[/green] {cls.name} ({cls.__name__})")
+    for name, message in result.errors:
+        console.print(f"[yellow]Plugin skipped[/yellow] {name}: {message}")
 
 
 @app.command()
@@ -156,27 +179,25 @@ def modules():
     banner()
 
     table = Table(title="Available Modules", border_style="red")
-    table.add_column("Alias", style="cyan", width=12)
+    table.add_column("Alias", style="cyan", width=14)
     table.add_column("Module", style="dim", width=20)
     table.add_column("Description")
 
-    mods = [
-        ("idor", "idor_scanner", "Generic IDOR with pattern detection + baseline comparison"),
-        ("recon", "recon_scanner", "Subdomain enum + endpoint discovery + tech fingerprinting"),
-        ("api", "api_fuzzer", "SQLi, NoSQL injection, XSS, boundary testing"),
-        ("auth", "auth_bypass", "Auth bypass, privilege escalation, method tampering, mass assignment"),
-        ("upload", "upload_scanner", "File upload bypass: double ext, null byte, polyglot, content-type"),
-        ("ssrf", "ssrf_scanner", "SSRF: internal access, cloud metadata, protocol smuggling, bypass"),
-        ("graphql", "graphql_scanner", "GraphQL: introspection, alias batching, complexity limits"),
-        ("jwt", "jwt_scanner", "JWT: alg confusion, none-alg, weak HMAC secret, claim tampering"),
-    ]
+    # Introspected from the engine rather than hardcoded, so this listing cannot
+    # drift away from what is actually registered.
+    engine = build_engine()
+    rows = []
+    for name, instance in engine.modules.items():
+        alias = name.replace("_scanner", "").replace("_fuzzer", "").replace("_bypass", "")
+        rows.append((alias, name, instance.description))
+    rows.sort()
 
-    for alias, name, desc in mods:
+    for alias, name, desc in rows:
         table.add_row(alias, name, desc)
 
     console.print(table)
-    console.print("\n[dim]Combine: --module idor,auth,ssrf,graphql[/dim]")
-    console.print("[dim]All:     --module idor,recon,api,auth,upload,ssrf,graphql,jwt[/dim]")
+    aliases = ",".join(a for a, _, _ in rows)
+    console.print(f"\n[dim]Combine: --module {aliases}[/dim]")
 
 
 @app.command()

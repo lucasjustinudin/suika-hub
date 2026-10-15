@@ -7,6 +7,7 @@ from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 
+from suika_hub._version import __version__
 from suika_hub.core.config import ScanConfig
 from suika_hub.core.http import AsyncClient
 from suika_hub.core.module import BaseModule, Finding
@@ -44,7 +45,7 @@ class SuikaEngine:
 
         console.print(
             Panel.fit(
-                f"[bold red]SUIKA HUNTER v2.0[/bold red]\n"
+                f"[bold red]SUIKA HUB v{__version__}[/bold red]\n"
                 f"Target: [cyan]{config.target}[/cyan]\n"
                 f"Modules: [green]{', '.join(config.modules)}[/green]\n"
                 f"Concurrency: {config.concurrency} | Delay: {config.delay}s",

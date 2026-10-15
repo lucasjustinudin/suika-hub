@@ -77,7 +77,7 @@ async function checkServer() {
       status.className = "status connected";
     }
   } catch {
-    status.textContent = "CLI server offline - run: python suika.py server";
+    status.textContent = "CLI server offline - run: suika-hub server";
     status.className = "status";
   }
 }

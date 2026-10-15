@@ -134,6 +134,11 @@ class TestSuikaEngineRun:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
+            # stats() is called synchronously by the engine, so it must return a
+            # plain value. Left as an AsyncMock it yields an un-awaited
+            # coroutine, which reports as "coroutine was never awaited" and
+            # would put a non-serialisable object into the report.
+            mock_instance.stats = MagicMock(return_value={"requests": 0, "errors": 0, "retries": 0})
             MockClient.return_value = mock_instance
 
             with patch("suika_hub.core.engine.Reporter") as MockReporter:
@@ -168,6 +173,11 @@ class TestSuikaEngineRun:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
+            # stats() is called synchronously by the engine, so it must return a
+            # plain value. Left as an AsyncMock it yields an un-awaited
+            # coroutine, which reports as "coroutine was never awaited" and
+            # would put a non-serialisable object into the report.
+            mock_instance.stats = MagicMock(return_value={"requests": 0, "errors": 0, "retries": 0})
             MockClient.return_value = mock_instance
 
             with patch("suika_hub.core.engine.Reporter"):
@@ -195,6 +205,11 @@ class TestSuikaEngineRun:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
+            # stats() is called synchronously by the engine, so it must return a
+            # plain value. Left as an AsyncMock it yields an un-awaited
+            # coroutine, which reports as "coroutine was never awaited" and
+            # would put a non-serialisable object into the report.
+            mock_instance.stats = MagicMock(return_value={"requests": 0, "errors": 0, "retries": 0})
             MockClient.return_value = mock_instance
 
             with patch("suika_hub.core.engine.Reporter"):
@@ -222,6 +237,11 @@ class TestSuikaEngineRun:
             mock_instance = AsyncMock()
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
             mock_instance.__aexit__ = AsyncMock(return_value=False)
+            # stats() is called synchronously by the engine, so it must return a
+            # plain value. Left as an AsyncMock it yields an un-awaited
+            # coroutine, which reports as "coroutine was never awaited" and
+            # would put a non-serialisable object into the report.
+            mock_instance.stats = MagicMock(return_value={"requests": 0, "errors": 0, "retries": 0})
             MockClient.return_value = mock_instance
 
             with patch("suika_hub.core.engine.Reporter"):
